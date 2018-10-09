@@ -1,0 +1,784 @@
+$query = "SELECT MIN([Item Number]) AS [MinOf Item Number],
+
+IIf([AllDoor Number] is null,MIN([Item Number]),[AllDoor Number]) AS [AllDoor Number],
+
+[Order Number], [Warning Label], Name, Species_DD_Desc, Style, Swing, Construction, 
+
+[Top Rail Flat], [Bottom Rail Flat], [Left Stile Flat], [Right Stile Flat], 
+
+[Door Thickness], [Leaf Height], [Leaf Width], [Finished Leaf Height], [Finished Leaf Width], [Downsize], [TopTrim], 
+
+[Hinge Length], [Top Hinge 1], [Top Hinge 2], [Top Hinge 3], [Top Hinge 4], [Top Hinge 5], 
+
+[Top Jamb Hinge 1], [Top Jamb Hinge 2], [Top Jamb Hinge 3], [Top Jamb Hinge 4], [Top Jamb Hinge 5],
+
+[Hinge Backset], [Lockset Lever Backset], [Lockset Lever Height],
+
+[Pocket Edge Pull Height], [Pocket Face Pull Backset], [Pocket Face Pull Height],
+
+[Left Stile Width], [Right Stile Width], [Stile Downsize], [Door Thickness Decimal], [Cw], 
+
+[Top Rail Width], [Bottom Rail Width], [HeightDec], [Knob Rail Ht], [Knob Rail Wid], ROUND([Widthdec],4) AS [Widthdec], [Knob Rail 2 Wid], [Knob Rail 2 Ht], 
+
+[HingeLoc], [Hinge Qty], [Inner Stile Flat], [Inner Stile Flat 2], [Inner Stile Flat 3], [Inner Stile Flat 4], [Inner Rail Flat], [Inner Rail Flat 2], [Inner Rail Flat 3], [Inner Rail Flat 4], 
+
+[Opening Height], [Opening Height 2], [Opening Height 3], [Opening Height 4],
+
+[Panel Material], [Panel Material 2], [Panel Material 3], [Panel Material 4],
+
+[Opening Width], [Opening Width 2], [Opening Width 3], [Opening Width 4],
+
+[Rail Spacing], Lock, Grade, [Cope Profile], [Panel Type], [Glass Type], [General Comments Doors], [Hinge Description], [Hinge Type], [Hinge Style], 
+
+Bore1, Bore2, Bore3, 
+
+[Eq Opening],
+
+[Ext Options1], [Ext Options2], [Ext Options3], [Ext Options4], [Ext Options5], [Ext Options6], [Ext Options7], [Ext Options8], [Ext Options9], [Ext Options10], [Ext Options11],
+
+[Hinge Part Number], [Center Stile Mill Length], [Center Stile 2 Mill Length], [Center Stile 3 Mill Length], [Center Stile 4 Mill Length], [Lockset Lever BS], [Lockset Lever Ht], [Pock Edge Pull Ht], [Pocket Face Pull Ht], [Pocket Face Pull BS], [Mort For], [Stile Construction], [General Comments Doors], [Glass Comments], [Moulding], [Prefinish Options], [Misc Door Detail], [Fire Rating], Backset, [Bore Height], [Mill Batch Nbr],
+
+[Passage Ht], [Passage Dia], [Passage BS], [Privacy Dia], [Privacy BS], [Privacy Ht], [Catch Type], [Catch Location], [Catch Dist], [Pock Edge Pull BS], 
+
+[Lockset Make], [Lockset Pass bore height],  [Lockset Priv Bore Height], [Privacy Diameter], [Privacy Make], [Jamb Grade], [Jamb Species], [Jamb Thickness Head], [Jamb Thickness Leg], [Jamb Type], [Rab Depth], [Opening Width Decimal], [Jamb Leg Length], [Jamb Width], [Cope Number], [Description]
+
+FROM ( 	
+	
+	SELECT HLHR_Qry.[Item Number] AS [Item Number], HLHR_Qry.[HLHR],
+
+	STUFF((SELECT ', ' + OE_Order_Entry_Detail.[Door Number] + IIf([qty display]<>'1 of 1','  ' + [qty display],'')
+            
+	FROM (OE_Order_Entry_Detail 
+	LEFT JOIN PD_Tracking ON (OE_Order_Entry_Detail.[Opening Width Decimal] = PD_Tracking.[Opening Width Decimal]) AND (OE_Order_Entry_Detail.[Door Width (in)] = PD_Tracking.[Door Width (in)]) AND (OE_Order_Entry_Detail.[Door Width (feet)] = PD_Tracking.[Door Width (feet)]) AND (OE_Order_Entry_Detail.[Door Number] = PD_Tracking.[Door Number]) AND (OE_Order_Entry_Detail.[Order Number] = PD_Tracking.[Order Number])) 
+	LEFT JOIN CL_Config_Calc_Lumber_Output ON (OE_Order_Entry_Detail.[Opening Width Decimal] = CL_Config_Calc_Lumber_Output.[Opening Width Decimal]) AND (OE_Order_Entry_Detail.[Door Width (in)] = CL_Config_Calc_Lumber_Output.[Door Width (in)]) AND (OE_Order_Entry_Detail.[Door Width (feet)] = CL_Config_Calc_Lumber_Output.[Door Width (feet)]) AND (OE_Order_Entry_Detail.[Door Number] = CL_Config_Calc_Lumber_Output.[Door Number]) AND (OE_Order_Entry_Detail.[Order Number] = CL_Config_Calc_Lumber_Output.[Order Number])
+			
+	WHERE OE_Order_Entry_Detail.[Order Number] = CL_Configuration_Detail.[Order Number] 
+	AND OE_Order_Entry_Detail.[Interior or Exterior] = CL_Configuration_Detail.[Int or Ext] 
+	AND OE_Order_Entry_Detail.[Style]=CL_Configuration_Detail.[Style]
+	AND OE_Order_Entry_Detail.[Swing]=[cl_config_detail_and_specs_qry].[swing]
+	AND OE_Order_Entry_Detail.[Species_DD_Desc] = CL_Configuration_Detail.[Species_DD_Desc]
+	AND OE_Order_Entry_Detail.[Door Thickness Decimal] = CL_Configuration_Detail.[Door Thickness Decimal]
+	AND OE_Order_Entry_Detail.[Door Height Decimal] = CL_Configuration_Detail.[Door Height Decimal]
+	AND OE_Order_Entry_Detail.[Door Width Decimal] = [CL_Config_Detail_And_Specs_Qry].[door width decimal]
+	AND OE_Order_Entry_Detail.[CL Calculation Group] = CL_Configuration_Detail.[CL Calculation Group]
+	AND OE_Order_Entry_Detail.[DS Report Group] = CL_Configuration_Detail.[DS Report Group]
+			
+	AND IIf([OE_Order_Entry_Detail].[swing] Like '%Poc%',3,IIf([OE_Order_Entry_Detail].[swing] Like '%S+B%',0,IIf([HLHR]='HL' And IIf([CL_Configuration_detail].[Mort Supplier] Like '%soss%' Or [CL_Configuration_detail].[Mort Supplier] Like '%tect%' Or [CL_Configuration_detail].[Mort Supplier] Like '%pivot%',1,0)=0 And [Prep Tast]=1 And [Prep HLA]='HRA',4,IIf([HLHR]='HR' And IIf([CL_Configuration_detail].[Mort Supplier] Like '%soss%' Or [CL_Configuration_detail].[Mort Supplier] Like '%tect%' Or [CL_Configuration_detail].[Mort Supplier] Like '%pivot%',1,0)=0 And [Prep Tast]=1 And [Prep HLA]='HLA',5,IIf([HLHR]='HL' And IIf([CL_Configuration_detail].[Mort Supplier] Like '%soss%' Or [CL_Configuration_detail].[Mort Supplier] Like '%tect%' Or [CL_Configuration_detail].[Mort Supplier] Like '%pivot%',1,0)=1 And [Prep Tast]=1 And [Prep HLA]='HLA',6,IIf([HLHR]='HR' And IIf([CL_Configuration_detail].[Mort Supplier] Like '%soss%' Or [CL_Configuration_detail].[Mort Supplier] Like '%tect%' Or [CL_Configuration_detail].[Mort Supplier] Like '%pivot%',1,0)=1 And [Prep Tast]=1 And [Prep HLA]='HRA',7,IIf([HLHR]='HL' And IIf([CL_Configuration_detail].[Mort Supplier] Like '%soss%' Or [CL_Configuration_detail].[Mort Supplier] Like '%tect%' Or [CL_Configuration_detail].[Mort Supplier] Like '%pivot%',1,0)=1 And [Prep Tast]=0 And [Prep HLA]='HLA',8,IIf([HLHR]='HR' And IIf([CL_Configuration_detail].[Mort Supplier] Like '%soss%' Or [CL_Configuration_detail].[Mort Supplier] Like '%tect%' Or [CL_Configuration_detail].[Mort Supplier] Like '%pivot%',1,0)=1 And [Prep Tast]=0 And [Prep HLA]='HRA',9,IIf([HLHR]='HL',1,IIf([HLHR]='HR',2,3)))))))))) 
+	= 
+	IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%Poc%' OR CL_Config_Detail_And_Specs_Qry.[jamb type]='Size Only – NO Bevel' OR CL_Config_Detail_And_Specs_Qry.[jamb type]='No Pre-Hang, Size, or Bevel',3,IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%S+B%' OR CL_Config_Detail_And_Specs_Qry.[jamb type]='Size Only – NO Bevel',0,IIf([HLHR]='HL' And IIf([CL_Configuration_detail].[Mort Supplier] Like '%soss%' Or [CL_Configuration_detail].[Mort Supplier] Like '%tect%' Or [CL_Configuration_detail].[Mort Supplier] Like '%pivot%',1,0)=0 And [Prep Tast]=1 And [Prep HLA]='HRA',4,IIf([HLHR]='HR' And IIf([CL_Configuration_detail].[Mort Supplier] Like '%soss%' Or [CL_Configuration_detail].[Mort Supplier] Like '%tect%' Or [CL_Configuration_detail].[Mort Supplier] Like '%pivot%',1,0)=0 And [Prep Tast]=1 And [Prep HLA]='HLA',5,IIf([HLHR]='HL' And IIf([CL_Configuration_detail].[Mort Supplier] Like '%soss%' Or [CL_Configuration_detail].[Mort Supplier] Like '%tect%' Or [CL_Configuration_detail].[Mort Supplier] Like '%pivot%',1,0)=1 And [Prep Tast]=1 And [Prep HLA]='HLA',6,IIf([HLHR]='HR' And IIf([CL_Configuration_detail].[Mort Supplier] Like '%soss%' Or [CL_Configuration_detail].[Mort Supplier] Like '%tect%' Or [CL_Configuration_detail].[Mort Supplier] Like '%pivot%',1,0)=1 And [Prep Tast]=1 And [Prep HLA]='HRA',7,IIf([HLHR]='HL' And IIf([CL_Configuration_detail].[Mort Supplier] Like '%soss%' Or [CL_Configuration_detail].[Mort Supplier] Like '%tect%' Or [CL_Configuration_detail].[Mort Supplier] Like '%pivot%' Or [CL_Configuration_detail].[Mort Supplier] Like '%ROCyork%',1,0)=1,8,IIf([HLHR]='HR' And IIf([CL_Configuration_detail].[Mort Supplier] Like '%soss%' Or [CL_Configuration_detail].[Mort Supplier] Like '%tect%' Or [CL_Configuration_detail].[Mort Supplier] Like '%pivot%' Or [CL_Configuration_detail].[Mort Supplier] Like '%ROCyork%',1,0)=1,9,IIf([HLHR]='HL',1,IIf([HLHR]='HR',2,3))))))))))
+
+	AND IIf([OE_Order_Entry_Detail].[swing] Like '%Bipart%' And [OE_Order_Entry_Detail].[Door Number] + IIf(PD_Tracking.[Qty Display]<>'1 of 1',' ' + PD_Tracking.[Qty Display],'') Like '%1 of%','HL',
+	IIf([OE_Order_Entry_Detail].[swing] Like '%Bipart%' And [OE_Order_Entry_Detail].[Door Number] + IIf(PD_Tracking.[Qty Display]<>'1 of 1',' ' + PD_Tracking.[Qty Display],'') Like '%2 of%','HR',
+	IIf([OE_Order_Entry_Detail].[swing] Like '%Dble Poc%' And [OE_Order_Entry_Detail].[Door Number] + IIf(PD_Tracking.[Qty Display]<>'1 of 1',' ' + PD_Tracking.[Qty Display],'') Like '%1 of%','HL',
+	IIf([OE_Order_Entry_Detail].[swing] Like '%Dble Poc%' And [OE_Order_Entry_Detail].[Door Number] + IIf(PD_Tracking.[Qty Display]<>'1 of 1',' ' + PD_Tracking.[Qty Display],'') Like '%2 of%','HR',
+	IIf(([OE_Order_Entry_Detail].[swing] Like '%Poc%' AND [OE_Order_Entry_Detail].[swing] Not Like '%Dble Poc%') And [OE_Order_Entry_Detail].[Door Number] + IIf(PD_Tracking.[Qty Display] Like '%1 of%','  ' + PD_Tracking.[Qty Display],'') Like '%1 of%','HL',
+	IIf([OE_Order_Entry_Detail].[swing] Like '%HR%','HR',
+	IIf([OE_Order_Entry_Detail].[swing] Like '%HL%','HL',''))))))) = [HLHR]
+
+	AND IIf(([OE_Order_Entry_Detail].[swing] Like '%bipart%' And [OE_Order_Entry_Detail].[swing] Like '%half%' And PD_Tracking.[Qty Display] Like '%1 of 2%') Or [OE_Order_Entry_Detail].[swing] Like '%Dble Poc%' And PD_Tracking.[Qty Display] Like '%1 of 2%',IIf([CL_Config_Calc_Lumber_Output].[Right Stile Width]<>' ',[CL_Config_Calc_Lumber_Output].[Right Stile Width],[CL_Config_Calc_Lumber_Output].[Left Stile Width]),[CL_Config_Calc_Lumber_Output].[Left Stile Width])+[CL_Config_Calc_Lumber_Output].[cope width]
+	= 
+	IIf(([cl_config_detail_and_specs_qry].[swing] Like '%bipart%' And [cl_config_detail_and_specs_qry].[swing] Like '%half%' And PD_Tracking.[Qty Display] Like '%1 of 2%') Or [cl_config_detail_and_specs_qry].[swing] Like '%Dble Poc%' And PD_Tracking.[Qty Display] Like '%1 of 2%',IIf([CL_Config_Calc_Lumber_Output].[Right Stile Width]<>' ',[CL_Config_Calc_Lumber_Output].[Right Stile Width],[CL_Config_Calc_Lumber_Output].[Left Stile Width]),[CL_Config_Calc_Lumber_Output].[Left Stile Width])+[CL_Config_Calc_Lumber_Output].[cope width]
+	
+	AND IIf(([OE_Order_Entry_Detail].[swing] Like '%bipart%' And [OE_Order_Entry_Detail].[swing] Like '%half%' And PD_Tracking.[Qty Display] Like '%1 of 2%') Or [OE_Order_Entry_Detail].[swing] Like '%Dble Poc%' And PD_Tracking.[Qty Display] Like '%1 of 2%',[CL_Config_Calc_Lumber_Output].[Left Stile Width],IIf([CL_Config_Calc_Lumber_Output].[Right Stile Width]<>' ',[CL_Config_Calc_Lumber_Output].[Right Stile Width],[CL_Config_Calc_Lumber_Output].[Left Stile Width]))+[CL_Config_Calc_Lumber_Output].[cope width]
+	=
+	IIf(([cl_config_detail_and_specs_qry].[swing] Like '%bipart%' And [cl_config_detail_and_specs_qry].[swing] Like '%half%' And PD_Tracking.[Qty Display] Like '%1 of 2%') Or [cl_config_detail_and_specs_qry].[swing] Like '%Dble Poc%' And PD_Tracking.[Qty Display] Like '%1 of 2%',[CL_Config_Calc_Lumber_Output].[Left Stile Width],IIf([CL_Config_Calc_Lumber_Output].[Right Stile Width]<>' ',[CL_Config_Calc_Lumber_Output].[Right Stile Width],[CL_Config_Calc_Lumber_Output].[Left Stile Width]))+[CL_Config_Calc_Lumber_Output].[cope width]
+
+	ORDER BY OE_Order_Entry_Detail.[Door Number]
+	FOR XML PATH('')) ,1,1,'') AS [AllDoor Number],
+
+	CL_Configuration_Detail.[Order Number], CL_Configuration_Detail.[CL Page Break],
+
+	IIf(CL_Config_Detail_And_Specs_Qry.[jamb type]='No Pre-Hang, Size, or Bevel','No Pre-Hang, Size or Bevel',IIf(CL_Config_Detail_And_Specs_Qry.[jamb type]='Size & bevel','Size and Bevel',IIf(CL_Config_Detail_And_Specs_Qry.[jamb type]='Size Only – NO Bevel','Size Only – NO Bevel',''))) AS [Warning Label],
+
+	CL_Config_Detail_And_Specs_Qry.[Name], 
+
+	CL_Config_Detail_And_Specs_Qry.[Species_DD_Desc], 
+
+	CL_Config_Detail_And_Specs_Qry.Style, 
+
+	CL_Config_Detail_And_Specs_Qry.Swing,
+
+	CL_Config_Detail_And_Specs_Qry.Construction,
+
+	CL_Configuration_Detail.[Top Rail Flat]+IIf(CL_Configuration_Detail.[Poc Top Rail Adder]>0,CL_Configuration_Detail.[Poc Top Rail Adder],0)
+	- IIf(CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Pock%',0.125,0) AS [Top Rail Flat], 
+
+	CL_Configuration_Detail.[Bottom Rail Flat]-CL_Config_Detail_And_Specs_Qry.[BTrim] AS [Bottom Rail Flat], 
+
+	CL_Configuration_Detail.[Left Stile Flat]
+	- IIf(CL_Config_Detail_And_Specs_Qry.[jamb type]='No Pre-Hang, Size, or Bevel',
+		0,
+		IIf(CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Bi%' AND CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Pock%',0.125,IIf(CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Pock%',0.0937,0))
+		+IIf(CL_Configuration_Detail.[Poc Pocket Adder]>0,CL_Configuration_Detail.[Poc Pocket Adder],0)
+	) AS [Left Stile Flat], 
+
+	CL_Configuration_Detail.[Right Stile Flat]
+	- IIf(CL_Config_Detail_And_Specs_Qry.[jamb type]='No Pre-Hang, Size, or Bevel',
+		0,
+		IIf(CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Bi%' AND CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Pock%',0.125,IIf(CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Pock%',0.0937,0))
+		+IIf(CL_Configuration_Detail.[Poc Strike Adder]>0,CL_Configuration_Detail.[Poc Strike Adder],0)
+	) AS [Right Stile Flat],
+
+	dbo.DecimalToFractionInch(IIf([cl_Config_calc_lumber_output].[door thickness decimal]=1.375,1.4375,[cl_Config_calc_lumber_output].[door thickness decimal])) AS [Door Thickness],
+
+	dbo.DecimalToFractionInch([CL_Configuration_Detail].[Door Height Decimal]+[pocket adder]+[CL_Configuration_Detail].[Top Rail Width UA]) AS [Leaf Height],
+
+	dbo.DecimalToFractionInch(ROUND(CL_Config_Detail_And_Specs_Qry.[door width decimal]+[pocket adder]+[Left Stile Width UA]+[Right Stile Width UA],4)) AS [Leaf Width],
+
+	IIf(CL_Config_Detail_And_Specs_Qry.Swing Like '%Pock%',
+	dbo.DecimalToFractionInch([CL_Configuration_Detail].[Door Height Decimal]+[pocket adder]+[CL_Configuration_Detail].[Top Rail Width UA]),
+	dbo.DecimalToFractionInch(([CL_Configuration_Detail].[Door Height Decimal]+[pocket adder]+[CL_Configuration_Detail].[Top Rail Width UA])
+	+IIf(CL_Configuration_Detail.[Poc Top Rail Adder]>0,CL_Configuration_Detail.[Poc Top Rail Adder],0)
+	- IIf(CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Pock%',0.125,0))) AS [Finished Leaf Height],
+
+	dbo.DecimalToFractionInch((ROUND(CL_Config_Detail_And_Specs_Qry.[door width decimal]+[pocket adder]+[Left Stile Width UA]+[Right Stile Width UA],4))
+	- IIf(CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Bi%' AND CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Pock%',0.250,IIf(CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Pock%',0.1875,0))) AS [Finished Leaf Width],
+
+	CL_Config_Detail_And_Specs_Qry.[Downsize],
+
+	IIf(CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Pock%',0.125,0) AS TopTrim, 
+
+	dbo.DecimalToFractionInch([Hinge Length]) AS [Hinge Length],
+
+	IIf([Top of Hinge 1]>0,([Top of Hinge 1]+IIf([HingeLoc]='STD' OR [HingeLoc]='Align' OR [HingeLoc]='Custom',0,[Hinge Length]/2)),0)
+	- IIf(CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Pock%',0.125,0) AS [Top Hinge 1],
+
+	IIf([Top of Hinge 2]>0,([Top of Hinge 2]+IIf([HingeLoc]='STD' OR [HingeLoc]='Align' OR [HingeLoc]='Custom',0,[Hinge Length]/2)),0)
+	- IIf(CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Pock%',0.125,0) AS [Top Hinge 2],
+
+	IIf([Top of Hinge 3]>0,([Top of Hinge 3]+IIf([HingeLoc]='STD' OR [HingeLoc]='Align' OR [HingeLoc]='Custom',0,[Hinge Length]/2)),0)
+	- IIf(CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Pock%',0.125,0) AS [Top Hinge 3],
+
+	IIf([Top of Hinge 4]>0,([Top of Hinge 4]+IIf([HingeLoc]='STD' OR [HingeLoc]='Align' OR [HingeLoc]='Custom',0,[Hinge Length]/2)),0)
+	- IIf(CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Pock%',0.125,0) AS [Top Hinge 4],
+
+	IIf([Top of Hinge 5]>0,([Top of Hinge 5]+IIf([HingeLoc]='STD' OR [HingeLoc]='Align' OR [HingeLoc]='Custom',0,[Hinge Length]/2)),0)
+	- IIf(CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Pock%',0.125,0) AS [Top Hinge 5],
+
+	IIf([Top of Hinge 1]>0,([Top of Hinge 1]+IIf([HingeLoc]='STD' OR [HingeLoc]='Align' OR [HingeLoc]='Custom',0,[Hinge Length]/2)),0) AS [Top Jamb Hinge 1],
+
+	IIf([Top of Hinge 2]>0,([Top of Hinge 2]+IIf([HingeLoc]='STD' OR [HingeLoc]='Align' OR [HingeLoc]='Custom',0,[Hinge Length]/2)),0) AS [Top Jamb Hinge 2],
+
+	IIf([Top of Hinge 3]>0,([Top of Hinge 3]+IIf([HingeLoc]='STD' OR [HingeLoc]='Align' OR [HingeLoc]='Custom',0,[Hinge Length]/2)),0) AS [Top Jamb Hinge 3],
+
+	IIf([Top of Hinge 4]>0,([Top of Hinge 4]+IIf([HingeLoc]='STD' OR [HingeLoc]='Align' OR [HingeLoc]='Custom',0,[Hinge Length]/2)),0) AS [Top Jamb Hinge 4],
+
+	IIf([Top of Hinge 5]>0,([Top of Hinge 5]+IIf([HingeLoc]='STD' OR [HingeLoc]='Align' OR [HingeLoc]='Custom',0,[Hinge Length]/2)),0) AS [Top Jamb Hinge 5],
+  
+	ABS(IIf([CL_Config_Calc_Lumber_Output].[Door Thickness Decimal]=1.375,1.4375,[CL_Config_Calc_Lumber_Output].[Door Thickness Decimal])-IIf(IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%S+B%',0,IIf([HLHR]='HL' And IIf([CL_Configuration_detail].[Mort Supplier] Like '%soss%' Or [CL_Configuration_detail].[Mort Supplier] Like '%tect%' Or [CL_Configuration_detail].[Mort Supplier] Like '%pivot%',1,0)=0 And [Prep Tast]=1 And [Prep HLA]='HRA',4,IIf([HLHR]='HR' And IIf([CL_Configuration_detail].[Mort Supplier] Like '%soss%' Or [CL_Configuration_detail].[Mort Supplier] Like '%tect%' Or [CL_Configuration_detail].[Mort Supplier] Like '%pivot%',1,0)=0 And [Prep Tast]=1 And [Prep HLA]='HLA',5,IIf([HLHR]='HL' And IIf([CL_Configuration_detail].[Mort Supplier] Like '%soss%' Or [CL_Configuration_detail].[Mort Supplier] Like '%tect%' Or [CL_Configuration_detail].[Mort Supplier] Like '%pivot%',1,0)=1 And [Prep Tast]=1 And [Prep HLA]='HLA',6,IIf([HLHR]='HR' And IIf([CL_Configuration_detail].[Mort Supplier] Like '%soss%' Or [CL_Configuration_detail].[Mort Supplier] Like '%tect%' Or [CL_Configuration_detail].[Mort Supplier] Like '%pivot%',1,0)=1 And [Prep Tast]=1 And [Prep HLA]='HRA',7,IIf([HLHR]='HL' And IIf([CL_Configuration_detail].[Mort Supplier] Like '%soss%' Or [CL_Configuration_detail].[Mort Supplier] Like '%tect%' Or [CL_Configuration_detail].[Mort Supplier] Like '%pivot%',1,0)=1 And [Prep Tast]=0 And [Prep HLA]='HLA',8,IIf([HLHR]='HR' And IIf([CL_Configuration_detail].[Mort Supplier] Like '%soss%' Or [CL_Configuration_detail].[Mort Supplier] Like '%tect%' Or [CL_Configuration_detail].[Mort Supplier] Like '%pivot%',1,0)=1 And [Prep Tast]=0 And [Prep HLA]='HRA',9,IIf([HLHR]='HL',1,IIf([HLHR]='HR',2,3)))))))))=3,0,IIf(CL_Config_Detail_And_Specs_Qry.[Door Thickness] Like '%1 1/4%',[pdt_hinge].[1 1/4 BS],IIf(CL_Config_Detail_And_Specs_Qry.[Door Thickness] Like '%1 3/8%',[pdt_hinge].[1 3/8 BS],IIf(CL_Config_Detail_And_Specs_Qry.[Door Thickness] Like '%1 3/4%',[pdt_hinge].[1 3/4 BS],IIf(CL_Config_Detail_And_Specs_Qry.[Door Thickness] Like '%2 1/4%',[pdt_hinge].[2 1/4 BS],IIf(CL_Config_Detail_And_Specs_Qry.[Door Thickness] Like '%2 5/8%',[pdt_hinge].[2 5/8 BS],IIf(CL_Config_Detail_And_Specs_Qry.[Door Thickness] Like '%3',[pdt_hinge].[3 BS],'')))))))) AS [Hinge Backset], 
+
+	IIf(CL_Config_Detail_And_Specs_Qry.Bore1 LIKE '%No Bore%' OR CL_Config_Detail_And_Specs_Qry.Bore2 LIKE '%No Bore%' OR CL_Config_Detail_And_Specs_Qry.Bore3 LIKE '%No Bore%',0,IIf([CL_Configuration_Detail].[Backset]>0,[CL_Configuration_Detail].[Backset],0)) AS [Lockset Lever Backset], 
+
+	IIf(CL_Config_Detail_And_Specs_Qry.Bore1 LIKE '%No Bore%' OR CL_Config_Detail_And_Specs_Qry.Bore2 LIKE '%No Bore%' OR CL_Config_Detail_And_Specs_Qry.Bore3 LIKE '%No Bore%',0,([CL_Configuration_Detail].[Door Height Decimal]+[pocket adder]+[CL_Configuration_Detail].[Top Rail Width UA])
+	+IIf(CL_Configuration_Detail.[Poc Top Rail Adder]>0,CL_Configuration_Detail.[Poc Top Rail Adder],0)
+	- IIf(CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Pock%',0.125,0)
+	- IIf([CL_Configuration_Detail].[Bore Height]>0,[CL_Configuration_Detail].[Bore Height],0)) AS [Lockset Lever Height], 
+
+	IIf(CL_Config_Detail_And_Specs_Qry.Swing Like '%Pock%',
+	[CL_Configuration_Detail].[Door Height Decimal]+[pocket adder]+[CL_Configuration_Detail].[Top Rail Width UA],
+	([CL_Configuration_Detail].[Door Height Decimal]+[pocket adder]+[CL_Configuration_Detail].[Top Rail Width UA])
+	+IIf(CL_Configuration_Detail.[Poc Top Rail Adder]>0,CL_Configuration_Detail.[Poc Top Rail Adder],0)
+	- IIf(CL_Config_Detail_And_Specs_Qry.Swing Not Like '%Pock%',0.125,0))
+	- IIf([CL_Configuration_Detail].[Pock Edge Pull Ht]>0,[CL_Configuration_Detail].[Pock Edge Pull Ht]+(IIf(CL_Configuration_Detail.[Pocket Face Pull Ht]>0,PDT_CNC_Face_Bore.[Edge Pull Offset],0)),0) AS [Pocket Edge Pull Height], 
+
+	IIf([CL_Configuration_Detail].[Pocket Face Pull BS]>0,[CL_Configuration_Detail].[Pocket Face Pull BS],0) AS [Pocket Face Pull Backset], 
+
+	IIf([CL_Configuration_Detail].[Pocket Face Pull HT]>0,[CL_Configuration_Detail].[Pocket Face Pull HT],0) AS [Pocket Face Pull Height],
+
+	IIf((CL_Config_Detail_And_Specs_Qry.[swing] Like '%bipart%' And CL_Config_Detail_And_Specs_Qry.[swing] Like '%half%' And PD_Tracking.[Qty Display] Like '%1 of 2%') Or CL_Config_Detail_And_Specs_Qry.[swing] Like '%Dble Poc%' And PD_Tracking.[Qty Display] Like '%1 of 2%',IIf([CL_Config_Calc_Lumber_Output].[Right Stile Width]<>' ',[CL_Config_Calc_Lumber_Output].[Right Stile Width],[CL_Config_Calc_Lumber_Output].[Left Stile Width]),[CL_Config_Calc_Lumber_Output].[Left Stile Width])+[CL_Config_Calc_Lumber_Output].[cope width]-0.0937 AS [Left Stile Width], 
+
+	IIf((CL_Config_Detail_And_Specs_Qry.[swing] Like '%bipart%' And CL_Config_Detail_And_Specs_Qry.[swing] Like '%half%' And PD_Tracking.[Qty Display] Like '%1 of 2%') Or CL_Config_Detail_And_Specs_Qry.[swing] Like '%Dble Poc%' And PD_Tracking.[Qty Display] Like '%1 of 2%',[CL_Config_Calc_Lumber_Output].[Left Stile Width],IIf([CL_Config_Calc_Lumber_Output].[Right Stile Width]<>' ',[CL_Config_Calc_Lumber_Output].[Right Stile Width],[CL_Config_Calc_Lumber_Output].[Left Stile Width]))+[CL_Config_Calc_Lumber_Output].[cope width]-0.0937 AS [Right Stile Width],
+
+	IIf(CL_Config_Detail_And_Specs_Qry.[jamb type]='No Pre-Hang, Size, or Bevel',0,IIf([dd_swing].[Stile Downsize]>0,(CL_Config_Detail_And_Specs_Qry.[Downsize]-.0156),0)) AS [Stile Downsize], 
+
+	IIf([CL_Config_Calc_Lumber_Output].[Door Thickness Decimal]=1.375,1.4375,[CL_Config_Calc_Lumber_Output].[Door Thickness Decimal]) AS [Door Thickness Decimal], 
+
+	IIf(CL_Config_Detail_And_Specs_Qry.[construction] Like '%Half%' Or CL_Config_Detail_And_Specs_Qry.[construction] Like '%Full%',CL_Config_Detail_And_Specs_Qry.[joint depth total],CL_Config_Detail_And_Specs_Qry.[cope width]) AS Cw, 
+
+	[cl_Config_calc_lumber_output].[top rail width]+CL_Config_Detail_And_Specs_Qry.[cope width] AS [Top Rail Width], 
+
+	[cl_Config_calc_lumber_output].[bottom rail width]+CL_Config_Detail_And_Specs_Qry.[cope width] AS [Bottom Rail Width], 
+
+	[CL_Configuration_Detail].[Door Height Decimal]+[pocket adder]+[CL_Configuration_Detail].[Top Rail Width UA] AS HeightDec, 
+
+	IIf([CL_Configuration_Detail].[rail flat 2]>0,[CL_Configuration_Detail].[bottom rail flat]+[CL_Configuration_Detail].[opening height]+[CL_Configuration_Detail].[rail flat 2]/2,IIf([panels up]>1,[Bottom Rail Flat]+1*IIf([panels up]>1,(([CL_Configuration_Detail].[door height decimal]-[Top Rail Flat]-[Bottom Rail Flat])-[inner rail flat]*([panels up]-1))/([panels up]),0)+[inner rail flat]/2,0)) AS [Knob Rail Ht], 
+
+	IIf([CL_Config_Calc_Lumber_Output].[rail flat 2]>0,[CL_Config_Calc_Lumber_Output].[rail flat 2]+2*CL_Config_Detail_And_Specs_Qry.[cope width],IIf([panels up]>1,[CL_Configuration_Detail].[inner rail flat]+2*CL_Config_Detail_And_Specs_Qry.[cope width],0)) AS [Knob Rail Wid], 
+
+	ROUND(CL_Config_Detail_And_Specs_Qry.[door width decimal]+[pocket adder]+[Left Stile Width UA]+[Right Stile Width UA],4) AS Widthdec, 
+
+	IIf([CL_Config_Calc_Lumber_Output].[rail flat 3]>0,[CL_Config_Calc_Lumber_Output].[rail flat 3]+2*CL_Config_Detail_And_Specs_Qry.[cope width],IIf([panels up]>2,[CL_Configuration_Detail].[inner rail flat]+2*CL_Config_Detail_And_Specs_Qry.[cope width],0)) AS [Knob Rail 2 Wid], 
+
+	IIf([CL_Configuration_Detail].[rail flat 3]>0,[CL_Configuration_Detail].[bottom rail flat]+[CL_Configuration_Detail].[opening height]+[CL_Configuration_Detail].[rail flat 2]+[CL_Configuration_Detail].[opening height 2]+[CL_Configuration_Detail].[rail flat 3]/2,IIf([panels up]>2,[Bottom Rail Flat]+2*IIf([panels up]>1,(([CL_Configuration_Detail].[door height decimal]-[Top Rail Flat]-[Bottom Rail Flat])-[inner rail flat]*([panels up]-1))/([panels up]),0)+[inner rail flat]*3/2,0)) AS [Knob Rail 2 Ht],
+
+	CL_Configuration_Detail.[HingeLoc],
+
+	CL_Config_Detail_And_Specs_Qry.[Hinge Qty],
+
+	CL_Configuration_Detail.[Inner Stile Flat], 
+
+	CL_Configuration_Detail.[Inner Stile Flat 2], 
+
+	CL_Configuration_Detail.[Inner Stile Flat 3], 
+
+	CL_Configuration_Detail.[Inner Stile Flat 4], 
+
+	CL_Configuration_Detail.[Inner Rail Flat], 
+
+	CL_Configuration_Detail.[Inner Rail Flat 2], 
+
+	CL_Configuration_Detail.[Inner Rail Flat 3], 
+
+	CL_Configuration_Detail.[Inner Rail Flat 4], 
+
+	CL_Configuration_Detail.[Opening Height],
+
+	CL_Configuration_Detail.[Opening Height 2],
+
+	CL_Configuration_Detail.[Opening Height 3],
+
+	CL_Configuration_Detail.[Opening Height 4],
+
+	CL_Configuration_Detail.[Panel Material],
+
+	CL_Configuration_Detail.[Panel Material 2],
+
+	CL_Configuration_Detail.[Panel Material 3],
+
+	CL_Configuration_Detail.[Panel Material 4],
+
+	IIf(CL_Configuration_Detail.[Panel Material] is not null AND CL_Configuration_Detail.[Opening Height] > 0,((CL_Config_Detail_And_Specs_Qry.[Door Width Decimal]-([Left Stile Flat]+[Right Stile Flat]))-([Inner Stile Flat]*([Panels Across]-1)))/[Panels Across],0) AS [Opening Width],
+
+	IIf(CL_Configuration_Detail.[Panel Material 2] is not null AND CL_Configuration_Detail.[Opening Height 2] > 0,((CL_Config_Detail_And_Specs_Qry.[Door Width Decimal]-([Left Stile Flat]+[Right Stile Flat]))-([Inner Stile Flat 2]*([Panels Across 2]-1)))/[Panels Across 2],0) AS [Opening Width 2],
+
+	IIf(CL_Configuration_Detail.[Panel Material 3] is not null AND CL_Configuration_Detail.[Opening Height 3] > 0,((CL_Config_Detail_And_Specs_Qry.[Door Width Decimal]-([Left Stile Flat]+[Right Stile Flat]))-([Inner Stile Flat 3]*([Panels Across 3]-1)))/[Panels Across 3],0) AS [Opening Width 3],
+
+	IIf(CL_Configuration_Detail.[Panel Material 4] is not null AND CL_Configuration_Detail.[Opening Height 4] > 0,((CL_Config_Detail_And_Specs_Qry.[Door Width Decimal]-([Left Stile Flat]+[Right Stile Flat]))-([Inner Stile Flat 4]*([Panels Across 4]-1)))/[Panels Across 4],0) AS [Opening Width 4],
+
+	IIf([panels up]>1,([CL_Configuration_Detail].[door height decimal]-[Top Rail Flat]-[Bottom Rail Flat])/([panels up]),0) AS [Rail Spacing], 
+
+	CL_Config_Detail_And_Specs_Qry.Lock, 
+
+	CL_Config_Detail_And_Specs_Qry.Grade,
+
+	CL_Config_Detail_And_Specs_Qry.[Cope Profile],
+
+	CL_Config_Detail_And_Specs_Qry.[Panel Type],
+
+	CL_Config_Detail_And_Specs_Qry.[Glass Type],
+
+	CL_Config_Detail_And_Specs_Qry.[General Comments Doors], 
+ 
+	CL_Config_Detail_And_Specs_Qry.[Hinge Description], 
+
+	CL_Config_Detail_And_Specs_Qry.[Hinge Type], 
+
+	CL_Config_Detail_And_Specs_Qry.[Hinge Style], 
+
+	CL_Config_Detail_And_Specs_Qry.Bore1, 
+
+	CL_Config_Detail_And_Specs_Qry.Bore2, 
+
+	CL_Config_Detail_And_Specs_Qry.Bore3, 
+
+	IIf([panels up]>1,(([CL_Configuration_Detail].[door height decimal]-[Top Rail Flat]-[Bottom Rail Flat])-[inner rail flat]*([panels up]-1))/([panels up]),0) AS [Eq Opening], 
+
+	CL_Config_Detail_And_Specs_Qry.[Ext Options1], 
+
+	CL_Config_Detail_And_Specs_Qry.[Ext Options2], 
+
+	CL_Config_Detail_And_Specs_Qry.[Ext Options3], 
+
+	CL_Config_Detail_And_Specs_Qry.[Ext Options4], 
+
+	CL_Config_Detail_And_Specs_Qry.[Ext Options5], 
+
+	CL_Config_Detail_And_Specs_Qry.[Ext Options6], 
+
+	CL_Config_Detail_And_Specs_Qry.[Ext Options7], 
+
+	CL_Config_Detail_And_Specs_Qry.[Ext Options8], 
+
+	CL_Config_Detail_And_Specs_Qry.[Ext Options9], 
+
+	CL_Config_Detail_And_Specs_Qry.[Ext Options10], 
+
+	CL_Config_Detail_And_Specs_Qry.[Ext Options11], 
+
+	CL_Config_Detail_And_Specs_Qry.[Hinge Part Number], 
+ 
+
+	[Center Stile Mill Length], 
+
+	[Center Stile 2 Mill Length], 
+
+	[Center Stile 3 Mill Length], 
+
+	[Center Stile 4 Mill Length],
+
+	CL_Configuration_Detail.[Lockset Lever BS], 
+
+	CL_Configuration_Detail.[Lockset Lever Ht], 
+
+	IIf([CL_Configuration_Detail].[Pock Edge Pull Ht]>0,[CL_Configuration_Detail].[Pock Edge Pull Ht]+(IIf(CL_Configuration_Detail.[Pocket Face Pull Ht]>0,PDT_CNC_Face_Bore.[Edge Pull Offset],0)),0) AS [Pock Edge Pull Ht],
+
+	CL_Configuration_Detail.[Pocket Face Pull Ht], 
+
+	CL_Configuration_Detail.[Pocket Face Pull BS], 
+
+	[CL_Configuration_Detail].[Mort Supplier] + ' ' + [CL_Configuration_Detail].[Mort Hinge Size] AS [Mort For], 
+
+	CL_Config_Detail_And_Specs_Qry.[Stile Construction], 
+
+	CL_Config_Detail_And_Specs_Qry.[Glass Comments],
+
+	CL_Config_Detail_And_Specs_Qry.[Moulding],
+
+	CL_Config_Detail_And_Specs_Qry.[Prefinish Options],
+
+	CL_Config_Detail_And_Specs_Qry.[Misc Door Detail],
+
+	CL_Config_Detail_And_Specs_Qry.[Fire Rating],
+
+	CL_Configuration_Detail.Backset, 
+
+	CL_Configuration_Detail.[Bore Height], 
+
+	PD_Tracking.[Mill Batch Nbr], 
+
+	IIf(CL_Config_Detail_And_Specs_Qry.Bore1 LIKE '%No Bore%' OR CL_Config_Detail_And_Specs_Qry.Bore2 LIKE '%No Bore%' OR CL_Config_Detail_And_Specs_Qry.Bore3 LIKE '%No Bore%',0,CL_Configuration_Detail.[Bore Height]) AS [Passage Ht], 
+
+	IIf(CL_Config_Detail_And_Specs_Qry.Bore1 LIKE '%No Bore%' OR CL_Config_Detail_And_Specs_Qry.Bore2 LIKE '%No Bore%' OR CL_Config_Detail_And_Specs_Qry.Bore3 LIKE '%No Bore%',0,CL_Configuration_Detail.[Bore Diameter]) AS [Passage Dia], 
+
+	IIf(CL_Config_Detail_And_Specs_Qry.Bore1 LIKE '%No Bore%' OR CL_Config_Detail_And_Specs_Qry.Bore2 LIKE '%No Bore%' OR CL_Config_Detail_And_Specs_Qry.Bore3 LIKE '%No Bore%',0,PDT_CNC_Bore.Backset) AS [Passage BS], 
+
+	IIf(CL_Config_Detail_And_Specs_Qry.Bore1 LIKE '%No Bore%' OR CL_Config_Detail_And_Specs_Qry.Bore2 LIKE '%No Bore%' OR CL_Config_Detail_And_Specs_Qry.Bore3 LIKE '%No Bore%',0,PDT_CNC_Bore_1.[Bore Diameter]) AS [Privacy Dia], 
+
+	IIf(CL_Config_Detail_And_Specs_Qry.Bore1 LIKE '%No Bore%' OR CL_Config_Detail_And_Specs_Qry.Bore2 LIKE '%No Bore%' OR CL_Config_Detail_And_Specs_Qry.Bore3 LIKE '%No Bore%',0,PDT_CNC_Bore_1.Backset) AS [Privacy BS], 
+
+	IIf(CL_Config_Detail_And_Specs_Qry.Bore1 LIKE '%No Bore%' OR CL_Config_Detail_And_Specs_Qry.Bore2 LIKE '%No Bore%' OR CL_Config_Detail_And_Specs_Qry.Bore3 LIKE '%No Bore%',0,COALESCE(CL_Configuration_Detail.[Privacy Height],0)) AS [Privacy Ht], 
+
+	CL_Configuration_Detail.[Catch Type], 
+
+	CL_Configuration_Detail.[Catch Location], 
+
+	CL_Configuration_Detail.[Catch Dist], 
+
+	CL_Configuration_Detail.[Pock Edge Pull BS], 
+
+	PDT_CNC_Lockset.[Lockset Make],  
+
+	CL_Configuration_Detail.[Bore Height] AS [Lockset Pass bore height], 
+
+	COALESCE(CL_Configuration_Detail.[Privacy Height],0) AS [Lockset Priv Bore Height], 
+
+	CL_Configuration_Detail.[Privacy Diameter], 
+
+	PDT_CNC_Lockset_1.[Lockset Make] AS [Privacy Make],
+
+	CL_Config_Detail_And_Specs_Qry.[Jamb Grade],
+
+	CL_Config_Detail_And_Specs_Qry.[Jamb Species],
+
+	CL_Config_Detail_And_Specs_Qry.[Jamb Thickness Head],
+
+	CL_Config_Detail_And_Specs_Qry.[Jamb Thickness Leg],
+
+	CL_Config_Detail_And_Specs_Qry.[Jamb Type],
+
+	CL_Config_Detail_And_Specs_Qry.[Rab Depth],
+
+	CL_Config_Detail_And_Specs_Qry.[Opening Width Decimal],
+
+	[CL_Configuration_Detail].[Door Height Decimal]+1.25 AS [Jamb Leg Length],
+
+	CL_Config_Detail_And_Specs_Qry.[Jamb Width],
+
+	CL_Config_Detail_And_Specs_Qry.[Cope Number],
+
+	CL_Config_Detail_And_Specs_Qry.[Description]
+
+	FROM ((((((((((((((
+	
+		SELECT Proposals.[Proposal #], OE_Order_Entry_Detail.[Order Number], OE_Order_Entry_Detail.[Interior or Exterior], OE_Order_Entry_Detail.Style, OE_Order_Entry_Detail.Species_DD_Desc, OE_Order_Entry_Detail.[DS Report Group], OE_Order_Entry_Detail.[Door Height Decimal], OE_Order_Entry_Detail.[CL Calculation Group], OE_Order_Entry_Detail.[Cut List Report Group], OE_Order_Entry_Detail.[Door Number], OE_Order_Entry_Detail.[Base Style], OE_Order_Entry_Detail.[Style Adder 1], OE_Order_Entry_Detail.[Style Adder 2], OE_Order_Entry_Detail.[Style Adder 3], OE_Order_Cover_Page.[Tenon Height],  OE_Order_Cover_Page.Moulding, OE_Order_Cover_Page.[Moulding Title], OE_Order_Cover_Page.[Moulding Width], OE_Order_Cover_Page.[Moulding Height], DD_Species.[Cut List Description], DD_Panel_Type.[Cut List Panel Description] AS [Panel Mtl], OE_Order_Entry_Detail.[Mill Batch Nbr], [DD_Door Style].[Flats Reviewed], DD_Species.[Mark Up Approved], OE_Order_Entry_Detail.[Door Thickness Fraction], OE_Order_Entry_Detail.[Door Thickness Decimal], OE_Order_Entry_Detail.[Opening Width Fraction], OE_Order_Entry_Detail.[Opening Width Decimal], OE_Order_Entry_Detail.[Door Width Fraction], OE_Order_Entry_Detail.[Door Width Decimal], OE_Order_Entry_Detail.[Door Height Fraction], OE_Order_Entry_Detail.[Jamb Width], DD_Species.Species, Proposals.Name, Proposals.[Signing Date], Proposals.[Select Rep], OE_Order_Entry_Detail.[Door Width (feet)], OE_Order_Entry_Detail.[Door Width (in)], OE_Order_Entry_Detail.[Door Width (Fraction)], OE_Order_Entry_Detail.[Door Height (feet)], OE_Order_Entry_Detail.[Door Height (in)], OE_Order_Entry_Detail.[Door Height (Fraction)], OE_Order_Entry_Detail.Swing, OE_Order_Entry_Detail.Description, OE_Order_Entry_Detail.Leafs AS Leaf, OE_Order_Entry_Detail.Unit, OE_Order_Entry_Detail.Leaf AS [Leafs Per Unit], OE_Order_Entry_Detail.Leafs, OE_Order_Entry_Detail.[Door Specific Comments], OE_Order_Cover_Page.Construction, OE_Order_Cover_Page.[Panel Options] AS [Panel Raise], DD_Panel_Type.[Cut List Panel Description], [DD_Species].[Yield] AS [Solid Panel Yield], OE_Order_Cover_Page.Grade, OE_Order_Cover_Page.[Glass Thickness], OE_Order_Cover_Page.[Glass Type], OE_Order_Cover_Page.[Glass Part Number], OE_Order_Cover_Page.[Glass Unit Thickness], OE_Order_Cover_Page.[Glass Panel 1], OE_Order_Cover_Page.[Glass Panel 1 Part Nbr], OE_Order_Cover_Page.[Glass Panel 2], OE_Order_Cover_Page.[Glass Panel 2 Part Nbr], OE_Order_Cover_Page.[SDL Grill Description], OE_Order_Cover_Page.[SDL Cutter], OE_Order_Cover_Page.[SDL Cope Width], OE_Order_Cover_Page.[SDL Base Fraction], OE_Order_Cover_Page.[SDL Base Decimal], OE_Order_Cover_Page.[SDL Grill Hgt Fraction], OE_Order_Cover_Page.[SDL Grill Hgt Decimal], OE_Order_Cover_Page.[SDL Indicator], OE_Order_Cover_Page.[Veneer Species], DD_Species_1.[Veneer Part Number], DD_Species_1.[Veneer Backer Part Nbr], OE_Order_Cover_Page.[Stile Construction], OE_Order_Entry_Detail.[Jamb Calculation Group], OE_Order_Cover_Page.[Jamb Thickness], OE_Order_Cover_Page.[Jamb Species], OE_Order_Cover_Page.[Jamb Grade], OE_Order_Cover_Page.[Jamb Type], OE_Order_Cover_Page.[Jamb How to Ship], OE_Order_Cover_Page.[Door Stop Profile], OE_Order_Cover_Page.[Door Stop Options], OE_Order_Cover_Page.[Hinge Type], OE_Order_Cover_Page.[Hinge Style], OE_Order_Cover_Page.[Hinge Part Number], OE_Order_Cover_Page.Bore1, OE_Order_Cover_Page.Bore2, OE_Order_Cover_Page.Bore3, OE_Order_Cover_Page.[Prefinish Options], OE_Order_Cover_Page.[Ext Options1], OE_Order_Cover_Page.[Ext Options2], OE_Order_Cover_Page.[Ext Options3], OE_Order_Cover_Page.[Ext Options4], OE_Order_Cover_Page.[Ext Options5], OE_Order_Cover_Page.[Ext Options6], OE_Order_Cover_Page.[Ext Options7], OE_Order_Cover_Page.[Ext Options8], OE_Order_Cover_Page.[Ext Options9], OE_Order_Cover_Page.[Ext Options10], OE_Order_Cover_Page.[Ext Options11], OE_Order_Cover_Page.[Panel Number], OE_Order_Cover_Page.[Panel Type], OE_Order_Cover_Page.[Mirror Two Sides], OE_Order_Cover_Page.[Mirror Attached], OE_Order_Cover_Page.[Hinge Pairs], OE_Order_Cover_Page.[Hinge Qty In Pairs], OE_Order_Cover_Page.[Lockset Location], OE_Order_Cover_Page.[Hinge Description], OE_Order_Cover_Page.[Panel Thickness], OE_Order_Cover_Page.[Cope Profile], OE_Order_Cover_Page.[Cope Number], 
+
+		OE_Order_Entry_Detail.[Door Thickness1] AS [Door Thickness], 
+                                            
+		DD_Thickness_1.Decimal AS [Door Thk Dec],
+
+		IIf(OE_Order_Cover_Page.[Downsize]>0,OE_Order_Cover_Page.[Downsize],DD_Swing.[Stile Downsize]) AS Downsize,
+
+	IIf(OE_Order_Cover_Page.[BTrim]>0,OE_Order_Cover_Page.[BTrim],0) AS BTrim,
+                                            
+		[OE_Order_Entry_Detail].[Order Number] + SUBSTRING([OE_Order_Entry_Detail].[Interior or Exterior],1,1) + [OE_Order_Entry_Detail].[Style] + [DD_Species].[Cut List Description] + CAST([OE_Order_Entry_Detail].[Door Thickness Decimal] AS NVARCHAR) + CAST([OE_Order_Entry_Detail].[DS Report Group] AS NVARCHAR) + CAST([Door Height Decimal] AS NVARCHAR) + CAST([CL Calculation Group] AS NVARCHAR) + CAST([Cut List Report Group] AS NVARCHAR) AS [CL Page Break],
+                                            
+		IIf([Construction] Like '%rev%' And [DD_Fraction].[Decimal]>0,[DD_Fraction].[Decimal],0) AS [Tenon Width], 
+                                            
+		IIf(DD_Panel_Type.[Cut List Panel Description] Like '%scl%' And [OE_Order_Cover_Page].[grade] Like '%paint%',[CL_Flush_SCL_Panels].[Panel Thickness Decimal],IIf([DD_Core_Material].[Thickness Decimal]>0,([DD_Thickness_1].[Decimal]-[DD_Core_Material].[Thickness Decimal])/2,[DD_Thickness_1].[Decimal])) AS [Skin Thickness Decimal], 
+                                            
+		dbo.DecimalToFractionInch(IIf(DD_Panel_Type.[Cut List Panel Description] Like '%scl%' And [OE_Order_Cover_Page].[grade] Like '%paint%',[CL_Flush_SCL_Panels].[Panel Thickness Decimal],IIf([DD_Core_Material].[Thickness Decimal]>0,([DD_Thickness_1].[Decimal]-[DD_Core_Material].[Thickness Decimal])/2,[DD_Thickness_1].[Decimal]))) AS [Skin Thickness Fraction],
+                                            
+		IIf([OE_Order_Cover_Page].[Cope Width]>' ',[DD_Fraction].[Decimal],0) AS [Cope Width], 
+                                            
+		IIf([OE_Order_Cover_Page].[Cope Height]>' ',[DD_Fraction_2].[Decimal],0) AS [Cope Height], 
+                                            
+		OE_Order_Cover_Page.[Joint Depth Adder] AS [Joint Depth], 
+                                            
+		(OE_Order_Cover_Page.[Joint Depth Adder] + IIf([OE_Order_Cover_Page].[Cope Width]>' ',[DD_Fraction].[Decimal],0)) AS [Joint Depth Total],
+                                            
+		[Door Thickness Fraction] + '  X  ' + [Door Width Fraction] + ' X  ' + [Door Height Fraction] AS Demensions, 
+                                            
+		IIf([swing gap]<>0,[swing gap],IIf([oe_order_entry_detail].[Swing] Like '%ast%',0.625,0)) AS [Astragal Gap], 
+                                            
+ 		IIf(DD_Thickness.Decimal>=0.5 And DD_Thickness.Decimal<=1.75,DD_Thickness.Decimal+0.5,DD_Thickness.Decimal) AS [Mill Edge Band Thickness Decimal], 
+                                            
+		IIf([DD_Core_Material].[Thickness Decimal]>0,(DD_Thickness.Decimal-[DD_Core_Material].[Thickness Decimal])/2,DD_Thickness.Decimal) AS [Panel Thickness Decimal], 
+                                            
+		DD_Panel_Type.[Cut List Panel Description] AS [Panel Construction], 
+                                            
+ 		OE_Order_Cover_Page.[Fire Rating], 
+                                            
+ 		[DD_Core_Material].[Part Number] AS [FC Part Number], 
+                                            
+		[DD_Core_Material].[Thickness Decimal] AS [FC Thickness Decimal], 
+                                            
+		IIf([Fire Rating] Like '%20%',0.25,IIf([Fire Rating] Like '%45%',0.5,IIf([Fire Rating] Like '%60%',0.5,IIf([Fire Rating] Like '%90%',0.625,0)))) AS [FC Old Thickness Decimal], 
+                                            
+ 		[DD_Core_Material].[Thickness Fraction] AS [FC Thickness], 
+                                            
+		IIf([Fire Rating] Like '%20%','5/16\"',IIf([Fire Rating] Like '%45%','1/2\"',IIf([Fire Rating] Like '%60%','1/2\"',IIf([Fire Rating] Like '%90%','5/8\"','')))) AS [FC Old Thickness], 
+                                            
+ 		IIf([Hinge Description] Like '% X 5%' Or [Hinge Type] Like '% X 5%',5,IIf([Hinge Description] Like '% X 4 1/2%' Or [Hinge Type] Like '% X 4 1/2%',4.5,IIf([Hinge Description] Like '% X 4%' Or [Hinge Type] Like '% X 4%',4,IIf([Hinge Description] Like '% X 3 1/2%' Or [Hinge Type] Like '% X 3 1/2%',3.5,IIf([Hinge Description] Like '% X 3%' Or [Hinge type] Like '% X 3%',3,0))))) AS [Hinge Len], 
+                                            
+ 		(([door height decimal]-8-IIf([Hinge Description] Like '% X 5%' Or [Hinge Type] Like '% X 5%',5,IIf([Hinge Description] Like '% X 4 1/2%' Or [Hinge Type] Like '% X 4 1/2%',4.5,IIf([Hinge Description] Like '% X 4%' Or [Hinge Type] Like '% X 4%',4,IIf([Hinge Description] Like '% X 3 1/2%' Or [Hinge Type] Like '% X 3 1/2%',3.5,IIf([Hinge Description] Like '% X 3%' Or [Hinge type] Like '% X 3%',3,0))))))-7)/(IIf([hinge qty in pairs] Is Not Null,IIf([hinge qty in pairs]<>3.5,[hinge qty in pairs],IIf([door height decimal]>90,4,IIf([door height decimal]<48,2,3))),0)-1) AS [Hinge Spacing], 
+                                            
+		7 AS [Top Hinge Loc], 
+                                            
+		[door height decimal]-8-IIf([Hinge Description] Like '% X 5%' Or [Hinge Type] Like '% X 5%',5,IIf([Hinge Description] Like '% X 4 1/2%' Or [Hinge Type] Like '% X 4 1/2%',4.5,IIf([Hinge Description] Like '% X 4%' Or [Hinge Type] Like '% X 4%',4,IIf([Hinge Description] Like '% X 3 1/2%' Or [Hinge Type] Like '% X 3 1/2%',3.5,IIf([Hinge Description] Like '% X 3%' Or [Hinge type] Like '% X 3%',3,0))))) AS [Bot Hinge Loc], 
+                                            
+		IIf([hinge qty in pairs] Is Not Null,IIf([hinge qty in pairs]<>3.5,[hinge qty in pairs],IIf([door height decimal]>90,4,IIf([door height decimal]<48,2,3))),0) AS [Hinge Qty], 
+                                            
+ 		IIf([ext options1] Like '%Lock%',[ext options1],'')+IIf([ext options2] Like '%Lock%',[ext options2],'')+IIf([ext options3] Like '%Lock%',[ext options3],'')+IIf([ext options4] Like '%Lock%',[ext options4],'')+IIf([ext options5] Like '%Lock%',[ext options5],'')+IIf([ext options6] Like '%Lock%',[ext options6],'')+IIf([ext options7] Like '%Lock%',[ext options7],'')+IIf([ext options8] Like '%Lock%',[ext options8],'')+IIf([ext options9] Like '%Lock%',[ext options9],'')+IIf([ext options10] Like '%Lock%',[ext options10],'')+IIf([ext options11] Like '%Lock%',[ext options11],'')+IIf([Bore1] Like '%Lock%',[Bore2],'')+IIf([Bore1] Like '%Lock%',[Bore3],'')+IIf([Bore1] Like '%Lock%',[Bore3],'') AS Lock, 
+                                            
+  		OE_Order_Entry_Detail.DSIndex, OE_Order_Cover_Page.[Hinge Mort PN],
+                                            
+   		OE_Order_Cover_Page.[General Comments Doors],
+                                          
+   		OE_Order_Cover_Page.[Glass Comments],
+                                           
+  		OE_Order_Cover_Page.[Misc Door Detail],
+
+		OE_Order_Cover_Page.[Jamb Thickness Head],
+
+		OE_Order_Cover_Page.[Jamb Thickness Leg],
+
+		OE_Order_Cover_Page.[Rab Depth]
+                                            
+  		FROM ((((((OE_Order_Entry_Detail LEFT JOIN DD_Species ON OE_Order_Entry_Detail.Species_DD_Desc = DD_Species.Species_DD_Desc) INNER JOIN Proposals ON OE_Order_Entry_Detail.[Order Number] = Proposals.[Proposal #]) LEFT JOIN DD_Thickness AS DD_Thickness_1 ON OE_Order_Entry_Detail.[Door Thickness1] = DD_Thickness_1.Fraction) LEFT JOIN DD_Fraction AS DD_Fraction_1 ON OE_Order_Entry_Detail.[Door Width (Fraction)] = DD_Fraction_1.Fraction) LEFT JOIN [DD_Door Style] ON OE_Order_Entry_Detail.[Base Style] = [DD_Door Style].[Base Style]) INNER JOIN (((((((OE_Order_Cover_Page LEFT JOIN DD_Panel_Type ON OE_Order_Cover_Page.[Panel Type] = DD_Panel_Type.[Panel Type]) LEFT JOIN DD_Thickness ON OE_Order_Cover_Page.[Panel Thickness] = DD_Thickness.Fraction) LEFT JOIN DD_Species AS DD_Species_1 ON OE_Order_Cover_Page.[Veneer Species] = DD_Species_1.Species_DD_Desc) LEFT JOIN DD_Fraction ON OE_Order_Cover_Page.[Cope Width] = DD_Fraction.Fraction) LEFT JOIN DD_Fraction AS DD_Fraction_2 ON OE_Order_Cover_Page.[Cope Height] = DD_Fraction_2.Fraction) LEFT JOIN DD_Core_Material ON OE_Order_Cover_Page.[Core Part Number] = DD_Core_Material.[Part Number]) LEFT JOIN CL_Flush_SCL_Panels ON (OE_Order_Cover_Page.[Int or Ext] = CL_Flush_SCL_Panels.[Interior or Exterior]) AND (OE_Order_Cover_Page.Grade = CL_Flush_SCL_Panels.Grade) AND (OE_Order_Cover_Page.[Door Thickness] = CL_Flush_SCL_Panels.Thickness)) ON (OE_Order_Entry_Detail.[DS Report Group] = OE_Order_Cover_Page.[DS Report Group]) AND (OE_Order_Entry_Detail.Species_DD_Desc = OE_Order_Cover_Page.Species_DD_Desc) AND (OE_Order_Entry_Detail.Style = OE_Order_Cover_Page.Style) AND (OE_Order_Entry_Detail.[Door Thickness1] = OE_Order_Cover_Page.[Door Thickness]) AND (OE_Order_Entry_Detail.[Interior or Exterior] = OE_Order_Cover_Page.[Int or Ext]) AND (OE_Order_Entry_Detail.[Order Number] = OE_Order_Cover_Page.[Order Number])) LEFT JOIN DD_Swing ON OE_Order_Entry_Detail.Swing = DD_Swing.Swing
+                                            
+		WHERE (((Proposals.[Proposal #])='$id') AND ((OE_Order_Entry_Detail.[Order Number])='$id') AND ((OE_Order_Entry_Detail.[Door Thickness1])>' ' And (OE_Order_Entry_Detail.[Door Thickness1])<>'n/a') AND ((OE_Order_Entry_Detail.Style)>' ' And (OE_Order_Entry_Detail.Style)<>'n/a') AND ((OE_Order_Entry_Detail.Species_DD_Desc)>' ') AND ((OE_Order_Entry_Detail.[Door Number])>' ' And (OE_Order_Entry_Detail.[Door Number])<>'misc') AND ((OE_Order_Cover_Page.[Order Number])='$id'))
+
+	) CL_Config_Detail_And_Specs_Qry LEFT JOIN DD_Species ON CL_Config_Detail_And_Specs_Qry.Species_DD_Desc = DD_Species.Species_DD_Desc) LEFT JOIN (CL_Configuration_Detail LEFT JOIN (
+
+		SELECT CL_Config_Adder_Sum_Qry.[Order Number], CL_Config_Adder_Sum_Qry.[Interior or Exterior], CL_Config_Adder_Sum_Qry.[Door Thickness], CL_Config_Adder_Sum_Qry.Style, CL_Config_Adder_Sum_Qry.Species_DD_Desc, CL_Config_Adder_Sum_Qry.[DS Report Group], CL_Config_Adder_Sum_Qry.[Door Height Decimal], CL_Config_Adder_Sum_Qry.[CL Calculation Group], OE_Pricing_Constants_Table.[Veneer Yield], OE_Pricing_Constants_Table.[Glass Yield], OE_Pricing_Constants_Table.[FC Yield], 
+
+		IIf([Panel Construction] Like '%solid%',[Solid Panel Yield],[MDF Yield]) AS [Panel Yield], 
+                                                            
+		CL_Config_Adder_Sum_Qry.[Solid Panel Yield], OE_Pricing_Constants_Table.[MDF Yield], 
+                                                            
+ 		IIf([Fire Rating] Like '%90%',-0.75,-1.25) AS [FC Width Adder], 
+                                                            
+		IIf([Fire Rating] Like '%90%',-0.375,-0.75) AS [FC Height Adder], 
+                                                            
+		CL_Config_Adder_Sum_Qry.[Fire Rating], 
+                                                            
+		IIf([Fire Rating]<>' ',2,1) AS [FC Multiplier], 
+                                                            
+		0 AS [Left Stile Adder], 
+                                                            
+ 		IIf([Pocket Door]= 'TRUE',1,0) AS [Right Stile Adder], 
+                                                            
+ 		IIf([Pocket Door]= 'TRUE',1,0) AS [Right Stile Pocket Adder], 
+                                                            
+		IIf([Pocket Door]= 'TRUE',1,0) AS [Top Rail Pocket Adder], 
+                                                            
+ 		IIf([Tenon Width]=0 And [Cope Width]=0,+0,IIf([Tenon Width]>[Cope Width],[Tenon Width]+0,0)) AS [Left Stile Width Adder], 
+                                                            
+		IIf([Tenon Width]=0 And [Cope Width]=0,+IIf([Pocket Door]= 'TRUE',1,0),IIf([Tenon Width]>[Cope Width],[Tenon Width]+IIf([Pocket Door]= 'TRUE',1,0),+IIf([Pocket Door]= 'TRUE',1,0))) AS [Right Stile Width Adder], 
+                                                            
+ 		0 AS [Rail Width Adder], 
+                                                            
+ 		0 AS [Ctr Width Adder], 
+                                                            
+		0 AS [Ctr Length Adder], 
+                                                            
+ 		IIf([Panel Construction] Like '%edge%',-4,0) AS [Edge Panel Adder], 
+                                                            
+		IIf([Panel Material]='Glass',[Glass Panel Gap],IIf([Fire Rating]>' ',[Fire Door Panel Gap],IIf([Panel Raise]>' ',[Raised Panel Gap],[Flat Panel Gap]))) AS [Gap Adder], 
+                                                            
+ 		IIf([Construction] Like '%reverse%' Or ([Construction] Like '%fire%' And [Cope Profile] Like '%R. Dado%'),-([Cope Width]+IIf([Panel Material]='Glass',[Glass Panel Gap],IIf([Fire Rating]>' ',[Fire Door Panel Gap],IIf([Panel Raise]>' ',[Raised Panel Gap],[Flat Panel Gap]))))*2,([Joint Depth]-IIf([Panel Material]='Glass',[Glass Panel Gap],IIf([Fire Rating]>' ',[Fire Door Panel Gap],IIf([Panel Raise]>' ',[Raised Panel Gap],[Flat Panel Gap]))))*2) AS [Panel Adder], 
+                                                            
+		IIf([Panel Material 2]='Glass',[Glass Panel Gap],IIf([Fire Rating]>' ',[Fire Door Panel Gap],IIf([Panel Raise]>' ',[Raised Panel Gap],[Flat Panel Gap]))) AS [Gap Adder 2], 
+                                                            
+ 		IIf([Construction] Like '%reverse%' Or ([Construction] Like '%fire%' And [Cope Profile] Like '%R. Dado%'),-([Cope Width]+IIf([Panel Material 2]='Glass',[Glass Panel Gap],IIf([Fire Rating]>' ',[Fire Door Panel Gap],IIf([Panel Raise]>' ',[Raised Panel Gap],[Flat Panel Gap]))))*2,([Joint Depth]-IIf([Panel Material 2]='Glass',[Glass Panel Gap],IIf([Fire Rating]>' ',[Fire Door Panel Gap],IIf([Panel Raise]>' ',[Raised Panel Gap],[Flat Panel Gap]))))*2) AS [Panel Adder 2],
+                                                            
+		IIf([Panel Material 3]='Glass',[Glass Panel Gap],IIf([Fire Rating]>' ',[Fire Door Panel Gap],IIf([Panel Raise]>' ',[Raised Panel Gap],[Flat Panel Gap]))) AS [Gap Adder 3], 
+                                                             
+  		IIf([Construction] Like '%reverse%' Or ([Construction] Like '%fire%' And [Cope Profile] Like '%R. Dado%'),-([Cope Width]+IIf([Panel Material 3]='Glass',[Glass Panel Gap],IIf([Fire Rating]>' ',[Fire Door Panel Gap],IIf([Panel Raise]>' ',[Raised Panel Gap],[Flat Panel Gap]))))*2,([Joint Depth]-IIf([Panel Material 3]='Glass',[Glass Panel Gap],IIf([Fire Rating]>' ',[Fire Door Panel Gap],IIf([Panel Raise]>' ',[Raised Panel Gap],[Flat Panel Gap]))))*2) AS [Panel Adder 3],
+                                                             
+  		IIf([Panel Material 4]='Glass',[Glass Panel Gap],IIf([Fire Rating]>' ',[Fire Door Panel Gap],IIf([Panel Raise]>' ',[Raised Panel Gap],[Flat Panel Gap]))) AS [Gap Adder 4], 
+                                                             
+		IIf([Construction] Like '%reverse%' Or ([Construction] Like '%fire%' And [Cope Profile] Like '%R. Dado%'),-([Cope Width]+IIf([Panel Material 4]='Glass',[Glass Panel Gap],IIf([Fire Rating]>' ',[Fire Door Panel Gap],IIf([Panel Raise]>' ',[Raised Panel Gap],[Flat Panel Gap]))))*2,([Joint Depth]-IIf([Panel Material 4]='Glass',[Glass Panel Gap],IIf([Fire Rating]>' ',[Fire Door Panel Gap],IIf([Panel Raise]>' ',[Raised Panel Gap],[Flat Panel Gap]))))*2) AS [Panel Adder 4],
+                                                             
+ 		IIf([Pocket Door]= 'TRUE',1,0) AS [Pocket Adder], CL_Config_Adder_Sum_Qry.[Ins Glass Multiplier], CL_Config_Adder_Sum_Qry.[Edge Band Width], dbo.DecimalToFractionInch([Edge Band Width]) AS [Edge Band Width Fraction], 
+                                                             
+ 		0.375 AS [Mill Outer Stile Length Adder], 
+                                                             
+  		IIf([Tenon Width]=0 And [Cope Width]=0,[Dado Depth]*2,IIf([Cope Width]>0 And [Joint Depth]>0,([Joint Depth]*2),0))+0.375 AS [Mill Inner Stile Length Adder], 
+                                                             
+		IIf([cope profile] Like '%half%',[Joint Depth]*2,IIf([Tenon Width]=0 And [Cope Width]=0,[Dado Depth]*2,IIf([Cope Width]>0 And [Joint Depth]>0,([Joint Depth]*2),0)))+0.375 AS [Mill Rail Length Adder], 
+                                                             
+		IIf([Construction] Like '%rev%' Or [Construction] Like '%stop%',0,IIf([Construction] Like '%lap%' And [Cope Width]<>0.5,0,0))+IIf([Tenon Width]=0 And [Cope Width]=0,+0,IIf([Tenon Width]>[Cope Width],[Tenon Width]+0,[Cope Width]+0))+0.375 AS [Mill Outer Stile Width Adder], 
+                                                             
+  		IIf([Construction] Like '%rev%' Or [Construction] Like '%stop%',0,IIf([Construction] Like '%lap%' And [Cope Width]<>0.5,0,0))+IIf([Tenon Width]>[Cope Width],[Tenon Width],[Cope Width])+0.375 AS [Mill Outer Rail Width Adder], 
+                                                             
+ 		IIf([Construction] Like '%rev%' Or [Construction] Like '%stop%',0,IIf([Construction] Like '%lap%' And [Cope Width]<>0.5,0,0))+IIf([Tenon Width]>[Cope Width],[Tenon Width]*2,[Cope Width]*2)+0.375 AS [Mill Inner Width Adder], 
+                                                             
+ 		OE_Pricing_Constants_Table.[Moulding Yield], OE_Pricing_Constants_Table.[Arch Moulding Mtl Adder], CL_Config_Adder_Sum_Qry.[Arch Rail Qty], OE_Pricing_Constants_Table.[Arch Rail Hours], CL_Config_Adder_Sum_Qry.[Arch Panel Qty], OE_Pricing_Constants_Table.[Arch Panel Hours], CL_Config_Adder_Sum_Qry.[Arch Moulding Qty], OE_Pricing_Constants_Table.[Arch Moulding Hours], OE_Pricing_Constants_Table.[Stave Core Int Species], OE_Pricing_Constants_Table.[Stave Core Ext Species], OE_Pricing_Constants_Table.[Stave Core Skin Thickness], OE_Pricing_Constants_Table.[Stave Core Edge Width], OE_Pricing_Constants_Table.[Stave Core Int Yield], OE_Pricing_Constants_Table.[Stave Core Ext Yield], CL_Config_Adder_Sum_Qry.[Cope Profile]
+                                                            
+  		FROM ( 
+														
+       		SELECT CL_Config_Detail_And_Specs_Qry.[Order Number], CL_Config_Detail_And_Specs_Qry.[Interior or Exterior], CL_Config_Detail_And_Specs_Qry.[Door Thickness], CL_Config_Detail_And_Specs_Qry.Style, CL_Config_Detail_And_Specs_Qry.Species_DD_Desc, CL_Config_Detail_And_Specs_Qry.[DS Report Group], CL_Config_Detail_And_Specs_Qry.[Door Height Decimal], CL_Config_Detail_And_Specs_Qry.[CL Calculation Group], CL_Config_Detail_And_Specs_Qry.[Stile Construction], CL_Configuration_Detail.[Edge Band Width], CL_Config_Detail_And_Specs_Qry.[Fire Rating], MAX(CL_Config_Detail_And_Specs_Qry.[Door Number]) AS [LastOfDoor Number], CL_Config_Detail_And_Specs_Qry.[Panel Raise], Sum(CL_Config_Detail_And_Specs_Qry.Leaf) AS SumOfLeaf, Sum(CL_Config_Detail_And_Specs_Qry.Leafs) AS SumOfLeafs, Sum(CL_Config_Detail_And_Specs_Qry.Unit) AS SumOfUnit, CL_Config_Detail_And_Specs_Qry.[Cope Profile], CL_Config_Detail_And_Specs_Qry.[Cope Number], CL_Config_Detail_And_Specs_Qry.Moulding, CL_Config_Detail_And_Specs_Qry.Construction, CL_Config_Detail_And_Specs_Qry.[Tenon Width], CL_Config_Detail_And_Specs_Qry.[Cope Width], CL_Config_Detail_And_Specs_Qry.[Joint Depth], CL_Config_Detail_And_Specs_Qry.[Joint Depth Total], IIf([Construction] Like '%full%',[Joint Depth],[Dado Depth Modified]) AS [Dado Depth], CL_Config_Detail_And_Specs_Qry.[Panel Thickness], CL_Config_Detail_And_Specs_Qry.[Panel Construction], CL_Configuration_Detail.[Panel Material], CL_Config_Detail_And_Specs_Qry.[Solid Panel Yield], CL_Configuration_Detail.[Flat Panel Gap], CL_Configuration_Detail.[Raised Panel Gap], CL_Configuration_Detail.[Glass Panel Gap], CL_Configuration_Detail.[Fire Door Panel Gap], CL_Configuration_Detail.[Pocket Door], CL_Config_Detail_And_Specs_Qry.[Veneer Species], CL_Configuration_Detail.[Panel Material 2], CL_Configuration_Detail.[Panel Material 3], CL_Configuration_Detail.[Panel Material 4], IIf([Glass Type] Like '%ins%',2,1) AS [Ins Glass Multiplier], CL_Configuration_Detail.[Arch Rail Qty], CL_Configuration_Detail.[Arch Panel Qty], CL_Configuration_Detail.[Arch Moulding Qty]
+    
+     		FROM ( 
+														
+				SELECT Proposals.[Proposal #], OE_Order_Entry_Detail.[Order Number], OE_Order_Entry_Detail.[Interior or Exterior], OE_Order_Entry_Detail.Style, OE_Order_Entry_Detail.Species_DD_Desc, OE_Order_Entry_Detail.[DS Report Group], OE_Order_Entry_Detail.[Door Height Decimal], OE_Order_Entry_Detail.[CL Calculation Group], OE_Order_Entry_Detail.[Cut List Report Group], OE_Order_Entry_Detail.[Door Number], OE_Order_Entry_Detail.[Base Style], OE_Order_Entry_Detail.[Style Adder 1], OE_Order_Entry_Detail.[Style Adder 2], OE_Order_Entry_Detail.[Style Adder 3], OE_Order_Cover_Page.[Tenon Height],  OE_Order_Cover_Page.Moulding, OE_Order_Cover_Page.[Moulding Title], OE_Order_Cover_Page.[Moulding Width], OE_Order_Cover_Page.[Moulding Height], DD_Species.[Cut List Description], DD_Panel_Type.[Cut List Panel Description] AS [Panel Mtl], OE_Order_Entry_Detail.[Mill Batch Nbr], [DD_Door Style].[Flats Reviewed], DD_Species.[Mark Up Approved], OE_Order_Entry_Detail.[Door Thickness Fraction], OE_Order_Entry_Detail.[Door Thickness Decimal], OE_Order_Entry_Detail.[Opening Width Fraction], OE_Order_Entry_Detail.[Opening Width Decimal], OE_Order_Entry_Detail.[Door Width Fraction], OE_Order_Entry_Detail.[Door Width Decimal], OE_Order_Entry_Detail.[Door Height Fraction], OE_Order_Entry_Detail.[Jamb Width], DD_Species.Species, Proposals.Name, Proposals.[Signing Date], Proposals.[Select Rep], OE_Order_Entry_Detail.[Door Width (feet)], OE_Order_Entry_Detail.[Door Width (in)], OE_Order_Entry_Detail.[Door Width (Fraction)], OE_Order_Entry_Detail.[Door Height (feet)], OE_Order_Entry_Detail.[Door Height (in)], OE_Order_Entry_Detail.[Door Height (Fraction)], OE_Order_Entry_Detail.Swing, OE_Order_Entry_Detail.Description, OE_Order_Entry_Detail.Leafs AS Leaf, OE_Order_Entry_Detail.Unit, OE_Order_Entry_Detail.Leaf AS [Leafs Per Unit], OE_Order_Entry_Detail.Leafs, OE_Order_Entry_Detail.[Door Specific Comments], OE_Order_Cover_Page.Construction, OE_Order_Cover_Page.[Panel Options] AS [Panel Raise], DD_Panel_Type.[Cut List Panel Description], [DD_Species].[Yield] AS [Solid Panel Yield], OE_Order_Cover_Page.Grade, OE_Order_Cover_Page.[Glass Thickness], OE_Order_Cover_Page.[Glass Type], OE_Order_Cover_Page.[Glass Part Number], OE_Order_Cover_Page.[Glass Unit Thickness], OE_Order_Cover_Page.[Glass Panel 1], OE_Order_Cover_Page.[Glass Panel 1 Part Nbr], OE_Order_Cover_Page.[Glass Panel 2], OE_Order_Cover_Page.[Glass Panel 2 Part Nbr], OE_Order_Cover_Page.[SDL Grill Description], OE_Order_Cover_Page.[SDL Cutter], OE_Order_Cover_Page.[SDL Cope Width], OE_Order_Cover_Page.[SDL Base Fraction], OE_Order_Cover_Page.[SDL Base Decimal], OE_Order_Cover_Page.[SDL Grill Hgt Fraction], OE_Order_Cover_Page.[SDL Grill Hgt Decimal], OE_Order_Cover_Page.[SDL Indicator], OE_Order_Cover_Page.[Veneer Species], DD_Species_1.[Veneer Part Number], DD_Species_1.[Veneer Backer Part Nbr], OE_Order_Cover_Page.[Stile Construction], OE_Order_Entry_Detail.[Jamb Calculation Group], OE_Order_Cover_Page.[Jamb Thickness], OE_Order_Cover_Page.[Jamb Species], OE_Order_Cover_Page.[Jamb Grade], OE_Order_Cover_Page.[Jamb Type], OE_Order_Cover_Page.[Jamb How to Ship], OE_Order_Cover_Page.[Door Stop Profile], OE_Order_Cover_Page.[Door Stop Options], OE_Order_Cover_Page.[Hinge Type], OE_Order_Cover_Page.[Hinge Part Number], OE_Order_Cover_Page.Bore1, OE_Order_Cover_Page.Bore2, OE_Order_Cover_Page.Bore3, OE_Order_Cover_Page.[Prefinish Options], OE_Order_Cover_Page.[Ext Options1], OE_Order_Cover_Page.[Ext Options2], OE_Order_Cover_Page.[Ext Options3], OE_Order_Cover_Page.[Ext Options4], OE_Order_Cover_Page.[Ext Options5], OE_Order_Cover_Page.[Ext Options6], OE_Order_Cover_Page.[Ext Options7], OE_Order_Cover_Page.[Ext Options8], OE_Order_Cover_Page.[Ext Options9], OE_Order_Cover_Page.[Ext Options10], OE_Order_Cover_Page.[Ext Options11], OE_Order_Cover_Page.[Panel Number], OE_Order_Cover_Page.[Panel Type], OE_Order_Cover_Page.[Mirror Two Sides], OE_Order_Cover_Page.[Mirror Attached], OE_Order_Cover_Page.[Hinge Pairs], OE_Order_Cover_Page.[Hinge Qty In Pairs], OE_Order_Cover_Page.[Lockset Location], OE_Order_Cover_Page.[Hinge Description], OE_Order_Cover_Page.[Panel Thickness], OE_Order_Cover_Page.[Cope Profile], OE_Order_Cover_Page.[Cope Number], 
+
+   				OE_Order_Entry_Detail.[Door Thickness1] AS [Door Thickness],
+			
+				IIf(OE_Order_Cover_Page.[Downsize]>0,OE_Order_Cover_Page.[Downsize],DD_Swing.[Stile Downsize]) AS Downsize,
+
+	IIf(OE_Order_Cover_Page.[BTrim]>0,OE_Order_Cover_Page.[BTrim],0) AS BTrim,
+                                                            
+				DD_Thickness_1.Decimal AS [Door Thk Dec],
+                                                            
+     			[OE_Order_Entry_Detail].[Order Number] + SUBSTRING([OE_Order_Entry_Detail].[Interior or Exterior],1,1) + [OE_Order_Entry_Detail].[Style] + [DD_Species].[Cut List Description] + CAST([OE_Order_Entry_Detail].[Door Thickness Decimal] AS NVARCHAR) + CAST([OE_Order_Entry_Detail].[DS Report Group] AS NVARCHAR) + CAST([Door Height Decimal] AS NVARCHAR) + CAST([CL Calculation Group] AS NVARCHAR) + CAST([Cut List Report Group] AS NVARCHAR) AS [CL Page Break],
+                                                            
+   				IIf([Construction] Like '%rev%' And [DD_Fraction].[Decimal]>0,[DD_Fraction].[Decimal],0) AS [Tenon Width], 
+                                                            
+       			IIf(DD_Panel_Type.[Cut List Panel Description] Like '%scl%' And [OE_Order_Cover_Page].[grade] Like '%paint%',[CL_Flush_SCL_Panels].[Panel Thickness Decimal],IIf([DD_Core_Material].[Thickness Decimal]>0,([DD_Thickness_1].[Decimal]-[DD_Core_Material].[Thickness Decimal])/2,[DD_Thickness_1].[Decimal])) AS [Skin Thickness Decimal], 
+                                                            
+         		dbo.DecimalToFractionInch(IIf(DD_Panel_Type.[Cut List Panel Description] Like '%scl%' And [OE_Order_Cover_Page].[grade] Like '%paint%',[CL_Flush_SCL_Panels].[Panel Thickness Decimal],IIf([DD_Core_Material].[Thickness Decimal]>0,([DD_Thickness_1].[Decimal]-[DD_Core_Material].[Thickness Decimal])/2,[DD_Thickness_1].[Decimal]))) AS [Skin Thickness Fraction],
+                                                            
+      			IIf([OE_Order_Cover_Page].[Cope Width]>' ',[DD_Fraction].[Decimal],0) AS [Cope Width], 
+                                                            
+        		IIf([OE_Order_Cover_Page].[Cope Height]>' ',[DD_Fraction_2].[Decimal],0) AS [Cope Height], 
+                                                            
+         		OE_Order_Cover_Page.[Joint Depth Adder] AS [Joint Depth], 
+                                                            
+         		(OE_Order_Cover_Page.[Joint Depth Adder] + IIf([OE_Order_Cover_Page].[Cope Width]>' ',[DD_Fraction].[Decimal],0)) AS [Joint Depth Total],
+                                                            
+        		[Door Thickness Fraction] + '  X  ' + [Door Width Fraction] + ' X  ' + [Door Height Fraction] AS Demensions, 
+                                                            
+          		IIf([swing gap]<>0,[swing gap],IIf([oe_order_entry_detail].[Swing] Like '%ast%',0.625,0)) AS [Astragal Gap], 
+                                                            
+          		IIf(DD_Thickness.Decimal>=0.5 And DD_Thickness.Decimal<=1.75,DD_Thickness.Decimal+0.5,DD_Thickness.Decimal) AS [Mill Edge Band Thickness Decimal], 
+                                                            
+       			IIf([DD_Core_Material].[Thickness Decimal]>0,(DD_Thickness.Decimal-[DD_Core_Material].[Thickness Decimal])/2,DD_Thickness.Decimal) AS [Panel Thickness Decimal], 
+                                                            
+          		DD_Panel_Type.[Cut List Panel Description] AS [Panel Construction], 
+                                                            
+         		OE_Order_Cover_Page.[Fire Rating], 
+                                                            
+          		[DD_Core_Material].[Part Number] AS [FC Part Number], 
+                                                            
+          		[DD_Core_Material].[Thickness Decimal] AS [FC Thickness Decimal], 
+                                                            
+         		IIf([Fire Rating] Like '%20%',0.25,IIf([Fire Rating] Like '%45%',0.5,IIf([Fire Rating] Like '%60%',0.5,IIf([Fire Rating] Like '%90%',0.625,0)))) AS [FC Old Thickness Decimal], 
+                                                            
+          		[DD_Core_Material].[Thickness Fraction] AS [FC Thickness], 
+                                                            
+           		IIf([Fire Rating] Like '%20%','5/16\"',IIf([Fire Rating] Like '%45%','1/2\"',IIf([Fire Rating] Like '%60%','1/2\"',IIf([Fire Rating] Like '%90%','5/8\"','')))) AS [FC Old Thickness], 
+                                                            
+         		IIf([Hinge Description] Like '% X 5%' Or [Hinge Type] Like '% X 5%',5,IIf([Hinge Description] Like '% X 4 1/2%' Or [Hinge Type] Like '% X 4 1/2%',4.5,IIf([Hinge Description] Like '% X 4%' Or [Hinge Type] Like '% X 4%',4,IIf([Hinge Description] Like '% X 3 1/2%' Or [Hinge Type] Like '% X 3 1/2%',3.5,IIf([Hinge Description] Like '% X 3%' Or [Hinge type] Like '% X 3%',3,0))))) AS [Hinge Len], 
+                                                            
+          		(([door height decimal]-8-IIf([Hinge Description] Like '% X 5%' Or [Hinge Type] Like '% X 5%',5,IIf([Hinge Description] Like '% X 4 1/2%' Or [Hinge Type] Like '% X 4 1/2%',4.5,IIf([Hinge Description] Like '% X 4%' Or [Hinge Type] Like '% X 4%',4,IIf([Hinge Description] Like '% X 3 1/2%' Or [Hinge Type] Like '% X 3 1/2%',3.5,IIf([Hinge Description] Like '% X 3%' Or [Hinge type] Like '% X 3%',3,0))))))-7)/(IIf([hinge qty in pairs] Is Not Null,IIf([hinge qty in pairs]<>3.5,[hinge qty in pairs],IIf([door height decimal]>90,4,IIf([door height decimal]<48,2,3))),0)-1) AS [Hinge Spacing], 
+                                                            
+          		7 AS [Top Hinge Loc], 
+                                                            
+          		[door height decimal]-8-IIf([Hinge Description] Like '% X 5%' Or [Hinge Type] Like '% X 5%',5,IIf([Hinge Description] Like '% X 4 1/2%' Or [Hinge Type] Like '% X 4 1/2%',4.5,IIf([Hinge Description] Like '% X 4%' Or [Hinge Type] Like '% X 4%',4,IIf([Hinge Description] Like '% X 3 1/2%' Or [Hinge Type] Like '% X 3 1/2%',3.5,IIf([Hinge Description] Like '% X 3%' Or [Hinge type] Like '% X 3%',3,0))))) AS [Bot Hinge Loc], 
+                                                            
+         		IIf([hinge qty in pairs] Is Not Null,IIf([hinge qty in pairs]<>3.5,[hinge qty in pairs],IIf([door height decimal]>90,4,IIf([door height decimal]<48,2,3))),0) AS [Hinge Qty], 
+                                                            
+          		IIf([ext options1] Like '%Lock%',[ext options1],'')+IIf([ext options2] Like '%Lock%',[ext options2],'')+IIf([ext options3] Like '%Lock%',[ext options3],'')+IIf([ext options4] Like '%Lock%',[ext options4],'')+IIf([ext options5] Like '%Lock%',[ext options5],'')+IIf([ext options6] Like '%Lock%',[ext options6],'')+IIf([ext options7] Like '%Lock%',[ext options7],'')+IIf([ext options8] Like '%Lock%',[ext options8],'')+IIf([ext options9] Like '%Lock%',[ext options9],'')+IIf([ext options10] Like '%Lock%',[ext options10],'')+IIf([ext options11] Like '%Lock%',[ext options11],'')+IIf([Bore1] Like '%Lock%',[Bore2],'')+IIf([Bore1] Like '%Lock%',[Bore3],'')+IIf([Bore1] Like '%Lock%',[Bore3],'') AS Lock, 
+                                                            
+         		OE_Order_Entry_Detail.DSIndex, OE_Order_Cover_Page.[Hinge Mort PN],
+                                                            
+          		OE_Order_Cover_Page.[General Comments Doors],
+                                            
+          		OE_Order_Cover_Page.[Glass Comments],
+                                                           
+      			OE_Order_Cover_Page.[Misc Door Detail]
+                                                            
+         		FROM ((((((OE_Order_Entry_Detail LEFT JOIN DD_Species ON OE_Order_Entry_Detail.Species_DD_Desc = DD_Species.Species_DD_Desc) INNER JOIN Proposals ON OE_Order_Entry_Detail.[Order Number] = Proposals.[Proposal #]) LEFT JOIN DD_Thickness AS DD_Thickness_1 ON OE_Order_Entry_Detail.[Door Thickness1] = DD_Thickness_1.Fraction) LEFT JOIN DD_Fraction AS DD_Fraction_1 ON OE_Order_Entry_Detail.[Door Width (Fraction)] = DD_Fraction_1.Fraction) LEFT JOIN [DD_Door Style] ON OE_Order_Entry_Detail.[Base Style] = [DD_Door Style].[Base Style]) INNER JOIN (((((((OE_Order_Cover_Page LEFT JOIN DD_Panel_Type ON OE_Order_Cover_Page.[Panel Type] = DD_Panel_Type.[Panel Type]) LEFT JOIN DD_Thickness ON OE_Order_Cover_Page.[Panel Thickness] = DD_Thickness.Fraction) LEFT JOIN DD_Species AS DD_Species_1 ON OE_Order_Cover_Page.[Veneer Species] = DD_Species_1.Species_DD_Desc) LEFT JOIN DD_Fraction ON OE_Order_Cover_Page.[Cope Width] = DD_Fraction.Fraction) LEFT JOIN DD_Fraction AS DD_Fraction_2 ON OE_Order_Cover_Page.[Cope Height] = DD_Fraction_2.Fraction) LEFT JOIN DD_Core_Material ON OE_Order_Cover_Page.[Core Part Number] = DD_Core_Material.[Part Number]) LEFT JOIN CL_Flush_SCL_Panels ON (OE_Order_Cover_Page.[Int or Ext] = CL_Flush_SCL_Panels.[Interior or Exterior]) AND (OE_Order_Cover_Page.Grade = CL_Flush_SCL_Panels.Grade) AND (OE_Order_Cover_Page.[Door Thickness] = CL_Flush_SCL_Panels.Thickness)) ON (OE_Order_Entry_Detail.[DS Report Group] = OE_Order_Cover_Page.[DS Report Group]) AND (OE_Order_Entry_Detail.Species_DD_Desc = OE_Order_Cover_Page.Species_DD_Desc) AND (OE_Order_Entry_Detail.Style = OE_Order_Cover_Page.Style) AND (OE_Order_Entry_Detail.[Door Thickness1] = OE_Order_Cover_Page.[Door Thickness]) AND (OE_Order_Entry_Detail.[Interior or Exterior] = OE_Order_Cover_Page.[Int or Ext]) AND (OE_Order_Entry_Detail.[Order Number] = OE_Order_Cover_Page.[Order Number])) LEFT JOIN DD_Swing ON OE_Order_Entry_Detail.Swing = DD_Swing.Swing
+                                                            
+          		WHERE (((Proposals.[Proposal #])='$id') AND ((OE_Order_Entry_Detail.[Order Number])='$id') AND ((OE_Order_Entry_Detail.[Door Thickness1])>' ' And (OE_Order_Entry_Detail.[Door Thickness1])<>'n/a') AND ((OE_Order_Entry_Detail.Style)>' ' And (OE_Order_Entry_Detail.Style)<>'n/a') AND ((OE_Order_Entry_Detail.Species_DD_Desc)>' ') AND ((OE_Order_Entry_Detail.[Door Number])>' ' And (OE_Order_Entry_Detail.[Door Number])<>'misc') AND ((OE_Order_Cover_Page.[Order Number])='$id'))
+                                                     
+      		) CL_Config_Detail_And_Specs_Qry LEFT JOIN CL_Configuration_Detail ON (CL_Config_Detail_And_Specs_Qry.[DS Report Group] = CL_Configuration_Detail.[DS Report Group]) AND (CL_Config_Detail_And_Specs_Qry.[CL Calculation Group] = CL_Configuration_Detail.[CL Calculation Group]) AND (CL_Config_Detail_And_Specs_Qry.[Order Number] = CL_Configuration_Detail.[Order Number]) AND (CL_Config_Detail_And_Specs_Qry.[Interior or Exterior] = CL_Configuration_Detail.[Int or Ext]) AND (CL_Config_Detail_And_Specs_Qry.[Door Thickness] = CL_Configuration_Detail.[Door Thickness]) AND (CL_Config_Detail_And_Specs_Qry.Style = CL_Configuration_Detail.Style) AND (CL_Config_Detail_And_Specs_Qry.Species_DD_Desc = CL_Configuration_Detail.Species_DD_Desc) AND (CL_Config_Detail_And_Specs_Qry.[Door Height Decimal] = CL_Configuration_Detail.[Door Height Decimal])
+                                                                
+    		GROUP BY CL_Config_Detail_And_Specs_Qry.[Order Number], CL_Config_Detail_And_Specs_Qry.[Interior or Exterior], CL_Config_Detail_And_Specs_Qry.[Door Thickness], CL_Config_Detail_And_Specs_Qry.Style, CL_Config_Detail_And_Specs_Qry.Species_DD_Desc, CL_Config_Detail_And_Specs_Qry.[DS Report Group], CL_Config_Detail_And_Specs_Qry.[Door Height Decimal], CL_Config_Detail_And_Specs_Qry.[CL Calculation Group], CL_Config_Detail_And_Specs_Qry.[Stile Construction], CL_Configuration_Detail.[Edge Band Width], CL_Config_Detail_And_Specs_Qry.[Fire Rating], CL_Config_Detail_And_Specs_Qry.[Panel Raise], CL_Config_Detail_And_Specs_Qry.[Cope Profile], CL_Config_Detail_And_Specs_Qry.[Cope Number], CL_Config_Detail_And_Specs_Qry.Moulding, CL_Config_Detail_And_Specs_Qry.Construction, CL_Config_Detail_And_Specs_Qry.[Tenon Width], CL_Config_Detail_And_Specs_Qry.[Cope Width], CL_Config_Detail_And_Specs_Qry.[Joint Depth], CL_Config_Detail_And_Specs_Qry.[Joint Depth Total], IIf([Construction] Like '%full%',[Joint Depth],[Dado Depth Modified]), CL_Config_Detail_And_Specs_Qry.[Panel Thickness], CL_Config_Detail_And_Specs_Qry.[Panel Construction], CL_Configuration_Detail.[Panel Material], CL_Config_Detail_And_Specs_Qry.[Solid Panel Yield], CL_Configuration_Detail.[Flat Panel Gap], CL_Configuration_Detail.[Raised Panel Gap], CL_Configuration_Detail.[Glass Panel Gap], CL_Configuration_Detail.[Fire Door Panel Gap], CL_Configuration_Detail.[Pocket Door], CL_Config_Detail_And_Specs_Qry.[Veneer Species], CL_Configuration_Detail.[Panel Material 2], CL_Configuration_Detail.[Panel Material 3], CL_Configuration_Detail.[Panel Material 4], IIf([Glass Type] Like '%ins%',2,1), CL_Configuration_Detail.[Arch Rail Qty], CL_Configuration_Detail.[Arch Panel Qty], CL_Configuration_Detail.[Arch Moulding Qty]
+                                               
+ 		) CL_Config_Adder_Sum_Qry, OE_Pricing_Constants_Table
+
+	) CL_Config_Adder_Qry ON (CL_Configuration_Detail.[Door Height Decimal] = CL_Config_Adder_Qry.[Door Height Decimal]) AND (CL_Configuration_Detail.[Order Number] = CL_Config_Adder_Qry.[Order Number]) AND (CL_Configuration_Detail.[Int or Ext] = CL_Config_Adder_Qry.[Interior or Exterior]) AND (CL_Configuration_Detail.[Door Thickness] = CL_Config_Adder_Qry.[Door Thickness]) AND (CL_Configuration_Detail.Style = CL_Config_Adder_Qry.Style) AND (CL_Configuration_Detail.Species_DD_Desc = CL_Config_Adder_Qry.Species_DD_Desc) AND (CL_Configuration_Detail.[CL Calculation Group] = CL_Config_Adder_Qry.[CL Calculation Group]) AND (CL_Configuration_Detail.[DS Report Group] = CL_Config_Adder_Qry.[DS Report Group])) ON (CL_Config_Detail_And_Specs_Qry.[Door Thickness] = CL_Configuration_Detail.[Door Thickness]) AND (CL_Config_Detail_And_Specs_Qry.[Door Height Decimal] = CL_Configuration_Detail.[Door Height Decimal]) AND (CL_Config_Detail_And_Specs_Qry.[Order Number] = CL_Configuration_Detail.[Order Number]) AND (CL_Config_Detail_And_Specs_Qry.[Interior or Exterior] = CL_Configuration_Detail.[Int or Ext]) AND (CL_Config_Detail_And_Specs_Qry.Style = CL_Configuration_Detail.Style) AND (CL_Config_Detail_And_Specs_Qry.Species_DD_Desc = CL_Configuration_Detail.Species_DD_Desc) AND (CL_Config_Detail_And_Specs_Qry.[CL Calculation Group] = CL_Configuration_Detail.[CL Calculation Group]) AND (CL_Config_Detail_And_Specs_Qry.[DS Report Group] = CL_Configuration_Detail.[DS Report Group])) LEFT JOIN CL_Config_Calc_Lumber_Output ON (CL_Config_Detail_And_Specs_Qry.[Order Number] = CL_Config_Calc_Lumber_Output.[Order Number]) AND (CL_Config_Detail_And_Specs_Qry.[Door Number] = CL_Config_Calc_Lumber_Output.[Door Number])) LEFT JOIN DD_Swing ON CL_Config_Detail_And_Specs_Qry.Swing = DD_Swing.Swing) LEFT JOIN PDT_Hinge ON (CL_Configuration_Detail.[Mort Supplier] = PDT_Hinge.[Mort Supplier]) AND (CL_Configuration_Detail.[Mort Hinge Size] = PDT_Hinge.[Mort Hinge Size])) LEFT JOIN PDT_CNC_Bore ON (CL_Configuration_Detail.[Edge Bore Length] = PDT_CNC_Bore.[Edge Bore Length]) AND (CL_Configuration_Detail.[Edge Bore Diameter] = PDT_CNC_Bore.[Edge Bore Diameter]) AND (CL_Configuration_Detail.Backset = PDT_CNC_Bore.Backset) AND (CL_Configuration_Detail.[Bore Diameter] = PDT_CNC_Bore.[Bore Diameter])) LEFT JOIN PDT_CNC_Bore AS PDT_CNC_Bore_1 ON (CL_Configuration_Detail.[Edge Bore Diameter] = PDT_CNC_Bore_1.[Edge Bore Diameter]) AND (CL_Configuration_Detail.[Edge Bore Length] = PDT_CNC_Bore_1.[Edge Bore Length]) AND (CL_Configuration_Detail.Backset = PDT_CNC_Bore_1.Backset) AND (CL_Configuration_Detail.[Privacy Diameter] = PDT_CNC_Bore_1.[Bore Diameter])) LEFT JOIN PD_Tracking ON (CL_Config_Detail_And_Specs_Qry.[Door Number] = PD_Tracking.[Door Number]) AND (CL_Config_Detail_And_Specs_Qry.[Order Number] = PD_Tracking.[Order Number])) LEFT JOIN PDT_CNC_Catch ON (CL_Configuration_Detail.[Catch Location] = PDT_CNC_Catch.[Catch Location]) AND (CL_Configuration_Detail.[Catch Make] = PDT_CNC_Catch.[Catch Model]) AND (CL_Configuration_Detail.[Catch Type] = PDT_CNC_Catch.[Catch Type])) LEFT JOIN PDT_CNC_Face_Bore ON CL_Configuration_Detail.[Pocket Face Pull Make] = PDT_CNC_Face_Bore.[Face Bore Make]) LEFT JOIN PDT_CNC_Edge_Bore ON CL_Configuration_Detail.[Pock Edge Pull Make] = PDT_CNC_Edge_Bore.[Edge Pull Make]) LEFT JOIN PDT_CNC_Lockset ON (CL_Configuration_Detail.[Passage Face Bore] = PDT_CNC_Lockset.Bore) AND (CL_Configuration_Detail.Backset = PDT_CNC_Lockset.Backset) AND (CL_Configuration_Detail.[Passage Make] = PDT_CNC_Lockset.[Lockset Make])) LEFT JOIN PDT_CNC_Lockset AS PDT_CNC_Lockset_1 ON (CL_Configuration_Detail.[Privacy Face Bore] = PDT_CNC_Lockset_1.Bore) AND (CL_Configuration_Detail.[Privacy BS] = PDT_CNC_Lockset_1.Backset) AND (CL_Configuration_Detail.[Privacy Make] = PDT_CNC_Lockset_1.[Lockset Make])) LEFT JOIN (
+
+		SELECT CL_Config_Detail_And_Specs_Qry.[Proposal #], CL_Config_Detail_And_Specs_Qry.[Door Number], PD_Tracking.[Qty Display],
+
+ 		IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%Bipart%' And CL_Config_Detail_And_Specs_Qry.[Door Number] + IIf(PD_Tracking.[Qty Display]<>'1 of 1',' ' + PD_Tracking.[Qty Display],'') Like '%1 of%','HL',
+		IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%Bipart%' And CL_Config_Detail_And_Specs_Qry.[Door Number] + IIf(PD_Tracking.[Qty Display]<>'1 of 1',' ' + PD_Tracking.[Qty Display],'') Like '%2 of%','HR',
+		IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%Dble Poc%' And CL_Config_Detail_And_Specs_Qry.[Door Number] + IIf(PD_Tracking.[Qty Display]<>'1 of 1',' ' + PD_Tracking.[Qty Display],'') Like '%1 of%','HL',
+		IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%Dble Poc%' And CL_Config_Detail_And_Specs_Qry.[Door Number] + IIf(PD_Tracking.[Qty Display]<>'1 of 1',' ' + PD_Tracking.[Qty Display],'') Like '%2 of%','HR',
+		IIf((CL_Config_Detail_And_Specs_Qry.[swing] Like '%Poc%' And CL_Config_Detail_And_Specs_Qry.[swing] Not Like '%Dble Poc%') And PD_Tracking.[Qty Display] Like '%1 of%','HL',
+		IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%HR%','HR',
+		IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%HL%','HL',''))))))) AS HLHR,
+	                       
+		CL_Config_Detail_And_Specs_Qry.[Door Number] + IIf(PD_Tracking.[Qty Display]<>'1 of 1','  ' + PD_Tracking.[Qty Display],'') AS [Item Number],
+                            
+ 		CL_Config_Detail_And_Specs_Qry.[Ext Options1] + CL_Config_Detail_And_Specs_Qry.[Ext Options2] + CL_Config_Detail_And_Specs_Qry.[Ext Options3] + CL_Config_Detail_And_Specs_Qry.[Ext Options4] + CL_Config_Detail_And_Specs_Qry.[Ext Options5] + CL_Config_Detail_And_Specs_Qry.[Ext Options6] + CL_Config_Detail_And_Specs_Qry.[Ext Options7] + CL_Config_Detail_And_Specs_Qry.[Ext Options8] + CL_Config_Detail_And_Specs_Qry.[Ext Options9] + CL_Config_Detail_And_Specs_Qry.[Ext Options10] + CL_Config_Detail_And_Specs_Qry.[Ext Options11] + CL_Config_Detail_And_Specs_Qry.[General Comments Doors] AS Combine, 
+
+		IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%HLA%' And CL_Config_Detail_And_Specs_Qry.[Ext Options1] + CL_Config_Detail_And_Specs_Qry.[Ext Options2] + CL_Config_Detail_And_Specs_Qry.[Ext Options3] + CL_Config_Detail_And_Specs_Qry.[Ext Options4] + CL_Config_Detail_And_Specs_Qry.[Ext Options5] + CL_Config_Detail_And_Specs_Qry.[Ext Options6] + CL_Config_Detail_And_Specs_Qry.[Ext Options7] + CL_Config_Detail_And_Specs_Qry.[Ext Options8] + CL_Config_Detail_And_Specs_Qry.[Ext Options9] + CL_Config_Detail_And_Specs_Qry.[Ext Options10] + CL_Config_Detail_And_Specs_Qry.[Ext Options11] + CL_Config_Detail_And_Specs_Qry.[General Comments Doors] Like '%outswing%','HRA',IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%HLA%','HLA',IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%HRA%' And CL_Config_Detail_And_Specs_Qry.[Ext Options1] + CL_Config_Detail_And_Specs_Qry.[Ext Options2] + CL_Config_Detail_And_Specs_Qry.[Ext Options3] + CL_Config_Detail_And_Specs_Qry.[Ext Options4] + CL_Config_Detail_And_Specs_Qry.[Ext Options5] + CL_Config_Detail_And_Specs_Qry.[Ext Options6] + CL_Config_Detail_And_Specs_Qry.[Ext Options7] + CL_Config_Detail_And_Specs_Qry.[Ext Options8] + CL_Config_Detail_And_Specs_Qry.[Ext Options9] + CL_Config_Detail_And_Specs_Qry.[Ext Options10] + CL_Config_Detail_And_Specs_Qry.[Ext Options11] + CL_Config_Detail_And_Specs_Qry.[General Comments Doors] Like '%outswing%','HLA',IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%HRA%','HRA','')))) AS [Prep HLA], 
+
+		IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%T-Ast%',1,0) AS [Prep Tast]
+                            
+ 		FROM ( 
+							
+   			SELECT Proposals.[Proposal #], OE_Order_Entry_Detail.[Order Number], OE_Order_Entry_Detail.[Interior or Exterior], OE_Order_Entry_Detail.Style, OE_Order_Entry_Detail.Species_DD_Desc, OE_Order_Entry_Detail.[DS Report Group], OE_Order_Entry_Detail.[Door Height Decimal], OE_Order_Entry_Detail.[CL Calculation Group], OE_Order_Entry_Detail.[Cut List Report Group], OE_Order_Entry_Detail.[Door Number], OE_Order_Entry_Detail.[Base Style], OE_Order_Entry_Detail.[Style Adder 1], OE_Order_Entry_Detail.[Style Adder 2], OE_Order_Entry_Detail.[Style Adder 3], OE_Order_Cover_Page.[Tenon Height],  OE_Order_Cover_Page.Moulding, OE_Order_Cover_Page.[Moulding Title], OE_Order_Cover_Page.[Moulding Width], OE_Order_Cover_Page.[Moulding Height], DD_Species.[Cut List Description], DD_Panel_Type.[Cut List Panel Description] AS [Panel Mtl], OE_Order_Entry_Detail.[Mill Batch Nbr], [DD_Door Style].[Flats Reviewed], DD_Species.[Mark Up Approved], OE_Order_Entry_Detail.[Door Thickness Fraction], OE_Order_Entry_Detail.[Door Thickness Decimal], OE_Order_Entry_Detail.[Opening Width Fraction], OE_Order_Entry_Detail.[Opening Width Decimal], OE_Order_Entry_Detail.[Door Width Fraction], OE_Order_Entry_Detail.[Door Width Decimal], OE_Order_Entry_Detail.[Door Height Fraction], OE_Order_Entry_Detail.[Jamb Width], DD_Species.Species, Proposals.Name, Proposals.[Signing Date], Proposals.[Select Rep], OE_Order_Entry_Detail.[Door Width (feet)], OE_Order_Entry_Detail.[Door Width (in)], OE_Order_Entry_Detail.[Door Width (Fraction)], OE_Order_Entry_Detail.[Door Height (feet)], OE_Order_Entry_Detail.[Door Height (in)], OE_Order_Entry_Detail.[Door Height (Fraction)], OE_Order_Entry_Detail.Swing, OE_Order_Entry_Detail.Description, OE_Order_Entry_Detail.Leafs AS Leaf, OE_Order_Entry_Detail.Unit, OE_Order_Entry_Detail.Leaf AS [Leafs Per Unit], OE_Order_Entry_Detail.Leafs, OE_Order_Entry_Detail.[Door Specific Comments], OE_Order_Cover_Page.Construction, OE_Order_Cover_Page.[Panel Options] AS [Panel Raise], DD_Panel_Type.[Cut List Panel Description], [DD_Species].[Yield] AS [Solid Panel Yield], OE_Order_Cover_Page.Grade, OE_Order_Cover_Page.[Glass Thickness], OE_Order_Cover_Page.[Glass Type], OE_Order_Cover_Page.[Glass Part Number], OE_Order_Cover_Page.[Glass Unit Thickness], OE_Order_Cover_Page.[Glass Panel 1], OE_Order_Cover_Page.[Glass Panel 1 Part Nbr], OE_Order_Cover_Page.[Glass Panel 2], OE_Order_Cover_Page.[Glass Panel 2 Part Nbr], OE_Order_Cover_Page.[SDL Grill Description], OE_Order_Cover_Page.[SDL Cutter], OE_Order_Cover_Page.[SDL Cope Width], OE_Order_Cover_Page.[SDL Base Fraction], OE_Order_Cover_Page.[SDL Base Decimal], OE_Order_Cover_Page.[SDL Grill Hgt Fraction], OE_Order_Cover_Page.[SDL Grill Hgt Decimal], OE_Order_Cover_Page.[SDL Indicator], OE_Order_Cover_Page.[Veneer Species], DD_Species_1.[Veneer Part Number], DD_Species_1.[Veneer Backer Part Nbr], OE_Order_Cover_Page.[Stile Construction], OE_Order_Entry_Detail.[Jamb Calculation Group], OE_Order_Cover_Page.[Jamb Thickness], OE_Order_Cover_Page.[Jamb Species], OE_Order_Cover_Page.[Jamb Grade], OE_Order_Cover_Page.[Jamb Type], OE_Order_Cover_Page.[Jamb How to Ship], OE_Order_Cover_Page.[Door Stop Profile], OE_Order_Cover_Page.[Door Stop Options], OE_Order_Cover_Page.[Hinge Type], OE_Order_Cover_Page.[Hinge Part Number], OE_Order_Cover_Page.Bore1, OE_Order_Cover_Page.Bore2, OE_Order_Cover_Page.Bore3, OE_Order_Cover_Page.[Prefinish Options], OE_Order_Cover_Page.[Ext Options1], OE_Order_Cover_Page.[Ext Options2], OE_Order_Cover_Page.[Ext Options3], OE_Order_Cover_Page.[Ext Options4], OE_Order_Cover_Page.[Ext Options5], OE_Order_Cover_Page.[Ext Options6], OE_Order_Cover_Page.[Ext Options7], OE_Order_Cover_Page.[Ext Options8], OE_Order_Cover_Page.[Ext Options9], OE_Order_Cover_Page.[Ext Options10], OE_Order_Cover_Page.[Ext Options11], OE_Order_Cover_Page.[Panel Number], OE_Order_Cover_Page.[Panel Type], OE_Order_Cover_Page.[Mirror Two Sides], OE_Order_Cover_Page.[Mirror Attached], OE_Order_Cover_Page.[Hinge Pairs], OE_Order_Cover_Page.[Hinge Qty In Pairs], OE_Order_Cover_Page.[Lockset Location], OE_Order_Cover_Page.[Hinge Description], OE_Order_Cover_Page.[Panel Thickness], OE_Order_Cover_Page.[Cope Profile], OE_Order_Cover_Page.[Cope Number], 
+
+    		OE_Order_Entry_Detail.[Door Thickness1] AS [Door Thickness], 
+                                
+      		DD_Thickness_1.Decimal AS [Door Thk Dec],
+                                
+      		[OE_Order_Entry_Detail].[Order Number] + SUBSTRING([OE_Order_Entry_Detail].[Interior or Exterior],1,1) + [OE_Order_Entry_Detail].[Style] + [DD_Species].[Cut List Description] + CAST([OE_Order_Entry_Detail].[Door Thickness Decimal] AS NVARCHAR) + CAST([OE_Order_Entry_Detail].[DS Report Group] AS NVARCHAR) + CAST([Door Height Decimal] AS NVARCHAR) + CAST([CL Calculation Group] AS NVARCHAR) + CAST([Cut List Report Group] AS NVARCHAR) AS [CL Page Break],
+                                
+      		IIf([Construction] Like '%rev%' And [DD_Fraction].[Decimal]>0,[DD_Fraction].[Decimal],0) AS [Tenon Width], 
+                                
+      		IIf(DD_Panel_Type.[Cut List Panel Description] Like '%scl%' And [OE_Order_Cover_Page].[grade] Like '%paint%',[CL_Flush_SCL_Panels].[Panel Thickness Decimal],IIf([DD_Core_Material].[Thickness Decimal]>0,([DD_Thickness_1].[Decimal]-[DD_Core_Material].[Thickness Decimal])/2,[DD_Thickness_1].[Decimal])) AS [Skin Thickness Decimal], 
+                                
+      		dbo.DecimalToFractionInch(IIf(DD_Panel_Type.[Cut List Panel Description] Like '%scl%' And [OE_Order_Cover_Page].[grade] Like '%paint%',[CL_Flush_SCL_Panels].[Panel Thickness Decimal],IIf([DD_Core_Material].[Thickness Decimal]>0,([DD_Thickness_1].[Decimal]-[DD_Core_Material].[Thickness Decimal])/2,[DD_Thickness_1].[Decimal]))) AS [Skin Thickness Fraction],
+                                
+      		IIf([OE_Order_Cover_Page].[Cope Width]>' ',[DD_Fraction].[Decimal],0) AS [Cope Width], 
+                                
+      		IIf([OE_Order_Cover_Page].[Cope Height]>' ',[DD_Fraction_2].[Decimal],0) AS [Cope Height], 
+                                
+       		OE_Order_Cover_Page.[Joint Depth Adder] AS [Joint Depth], 
+                                
+      		(OE_Order_Cover_Page.[Joint Depth Adder] + IIf([OE_Order_Cover_Page].[Cope Width]>' ',[DD_Fraction].[Decimal],0)) AS [Joint Depth Total],
+                                
+      		[Door Thickness Fraction] + '  X  ' + [Door Width Fraction] + ' X  ' + [Door Height Fraction] AS Demensions, 
+                                
+     		IIf([swing gap]<>0,[swing gap],IIf([oe_order_entry_detail].[Swing] Like '%ast%',0.625,0)) AS [Astragal Gap], 
+                                
+       		IIf(DD_Thickness.Decimal>=0.5 And DD_Thickness.Decimal<=1.75,DD_Thickness.Decimal+0.5,DD_Thickness.Decimal) AS [Mill Edge Band Thickness Decimal], 
+                                
+      		IIf([DD_Core_Material].[Thickness Decimal]>0,(DD_Thickness.Decimal-[DD_Core_Material].[Thickness Decimal])/2,DD_Thickness.Decimal) AS [Panel Thickness Decimal], 
+                                
+   			DD_Panel_Type.[Cut List Panel Description] AS [Panel Construction], 
+                                
+   			OE_Order_Cover_Page.[Fire Rating], 
+                                
+     		[DD_Core_Material].[Part Number] AS [FC Part Number], 
+                                
+     		[DD_Core_Material].[Thickness Decimal] AS [FC Thickness Decimal], 
+                                
+      		IIf([Fire Rating] Like '%20%',0.25,IIf([Fire Rating] Like '%45%',0.5,IIf([Fire Rating] Like '%60%',0.5,IIf([Fire Rating] Like '%90%',0.625,0)))) AS [FC Old Thickness Decimal], 
+                                
+      		[DD_Core_Material].[Thickness Fraction] AS [FC Thickness], 
+                                
+      		IIf([Fire Rating] Like '%20%','5/16\"',IIf([Fire Rating] Like '%45%','1/2\"',IIf([Fire Rating] Like '%60%','1/2\"',IIf([Fire Rating] Like '%90%','5/8\"','')))) AS [FC Old Thickness], 
+                                
+       		IIf([Hinge Description] Like '% X 5%' Or [Hinge Type] Like '% X 5%',5,IIf([Hinge Description] Like '% X 4 1/2%' Or [Hinge Type] Like '% X 4 1/2%',4.5,IIf([Hinge Description] Like '% X 4%' Or [Hinge Type] Like '% X 4%',4,IIf([Hinge Description] Like '% X 3 1/2%' Or [Hinge Type] Like '% X 3 1/2%',3.5,IIf([Hinge Description] Like '% X 3%' Or [Hinge type] Like '% X 3%',3,0))))) AS [Hinge Len], 
+                                
+     		(([door height decimal]-8-IIf([Hinge Description] Like '% X 5%' Or [Hinge Type] Like '% X 5%',5,IIf([Hinge Description] Like '% X 4 1/2%' Or [Hinge Type] Like '% X 4 1/2%',4.5,IIf([Hinge Description] Like '% X 4%' Or [Hinge Type] Like '% X 4%',4,IIf([Hinge Description] Like '% X 3 1/2%' Or [Hinge Type] Like '% X 3 1/2%',3.5,IIf([Hinge Description] Like '% X 3%' Or [Hinge type] Like '% X 3%',3,0))))))-7)/(IIf([hinge qty in pairs] Is Not Null,IIf([hinge qty in pairs]<>3.5,[hinge qty in pairs],IIf([door height decimal]>90,4,IIf([door height decimal]<48,2,3))),0)-1) AS [Hinge Spacing], 
+                                
+      		7 AS [Top Hinge Loc], 
+                                
+  			[door height decimal]-8-IIf([Hinge Description] Like '% X 5%' Or [Hinge Type] Like '% X 5%',5,IIf([Hinge Description] Like '% X 4 1/2%' Or [Hinge Type] Like '% X 4 1/2%',4.5,IIf([Hinge Description] Like '% X 4%' Or [Hinge Type] Like '% X 4%',4,IIf([Hinge Description] Like '% X 3 1/2%' Or [Hinge Type] Like '% X 3 1/2%',3.5,IIf([Hinge Description] Like '% X 3%' Or [Hinge type] Like '% X 3%',3,0))))) AS [Bot Hinge Loc], 
+                                
+
+     		IIf([hinge qty in pairs] Is Not Null,IIf([hinge qty in pairs]<>3.5,[hinge qty in pairs],IIf([door height decimal]>90,4,IIf([door height decimal]<48,2,3))),0) AS [Hinge Qty], 
+                                
+       		IIf([ext options1] Like '%Lock%',[ext options1],'')+IIf([ext options2] Like '%Lock%',[ext options2],'')+IIf([ext options3] Like '%Lock%',[ext options3],'')+IIf([ext options4] Like '%Lock%',[ext options4],'')+IIf([ext options5] Like '%Lock%',[ext options5],'')+IIf([ext options6] Like '%Lock%',[ext options6],'')+IIf([ext options7] Like '%Lock%',[ext options7],'')+IIf([ext options8] Like '%Lock%',[ext options8],'')+IIf([ext options9] Like '%Lock%',[ext options9],'')+IIf([ext options10] Like '%Lock%',[ext options10],'')+IIf([ext options11] Like '%Lock%',[ext options11],'')+IIf([Bore1] Like '%Lock%',[Bore2],'')+IIf([Bore1] Like '%Lock%',[Bore3],'')+IIf([Bore1] Like '%Lock%',[Bore3],'') AS Lock, 
+                                
+       		OE_Order_Entry_Detail.DSIndex, OE_Order_Cover_Page.[Hinge Mort PN],
+                                
+    		OE_Order_Cover_Page.[General Comments Doors],
+                              
+       		OE_Order_Cover_Page.[Glass Comments],
+                               
+    		OE_Order_Cover_Page.[Misc Door Detail]
+                                
+      		FROM ((((((OE_Order_Entry_Detail LEFT JOIN DD_Species ON OE_Order_Entry_Detail.Species_DD_Desc = DD_Species.Species_DD_Desc) INNER JOIN Proposals ON OE_Order_Entry_Detail.[Order Number] = Proposals.[Proposal #]) LEFT JOIN DD_Thickness AS DD_Thickness_1 ON OE_Order_Entry_Detail.[Door Thickness1] = DD_Thickness_1.Fraction) LEFT JOIN DD_Fraction AS DD_Fraction_1 ON OE_Order_Entry_Detail.[Door Width (Fraction)] = DD_Fraction_1.Fraction) LEFT JOIN [DD_Door Style] ON OE_Order_Entry_Detail.[Base Style] = [DD_Door Style].[Base Style]) INNER JOIN (((((((OE_Order_Cover_Page LEFT JOIN DD_Panel_Type ON OE_Order_Cover_Page.[Panel Type] = DD_Panel_Type.[Panel Type]) LEFT JOIN DD_Thickness ON OE_Order_Cover_Page.[Panel Thickness] = DD_Thickness.Fraction) LEFT JOIN DD_Species AS DD_Species_1 ON OE_Order_Cover_Page.[Veneer Species] = DD_Species_1.Species_DD_Desc) LEFT JOIN DD_Fraction ON OE_Order_Cover_Page.[Cope Width] = DD_Fraction.Fraction) LEFT JOIN DD_Fraction AS DD_Fraction_2 ON OE_Order_Cover_Page.[Cope Height] = DD_Fraction_2.Fraction) LEFT JOIN DD_Core_Material ON OE_Order_Cover_Page.[Core Part Number] = DD_Core_Material.[Part Number]) LEFT JOIN CL_Flush_SCL_Panels ON (OE_Order_Cover_Page.[Int or Ext] = CL_Flush_SCL_Panels.[Interior or Exterior]) AND (OE_Order_Cover_Page.Grade = CL_Flush_SCL_Panels.Grade) AND (OE_Order_Cover_Page.[Door Thickness] = CL_Flush_SCL_Panels.Thickness)) ON (OE_Order_Entry_Detail.[DS Report Group] = OE_Order_Cover_Page.[DS Report Group]) AND (OE_Order_Entry_Detail.Species_DD_Desc = OE_Order_Cover_Page.Species_DD_Desc) AND (OE_Order_Entry_Detail.Style = OE_Order_Cover_Page.Style) AND (OE_Order_Entry_Detail.[Door Thickness1] = OE_Order_Cover_Page.[Door Thickness]) AND (OE_Order_Entry_Detail.[Interior or Exterior] = OE_Order_Cover_Page.[Int or Ext]) AND (OE_Order_Entry_Detail.[Order Number] = OE_Order_Cover_Page.[Order Number])) LEFT JOIN DD_Swing ON OE_Order_Entry_Detail.Swing = DD_Swing.Swing
+                                
+      		WHERE (((Proposals.[Proposal #])='$id') AND ((OE_Order_Entry_Detail.[Order Number])='$id') AND ((OE_Order_Entry_Detail.[Door Thickness1])>' ' And (OE_Order_Entry_Detail.[Door Thickness1])<>'n/a') AND ((OE_Order_Entry_Detail.Style)>' ' And (OE_Order_Entry_Detail.Style)<>'n/a') AND ((OE_Order_Entry_Detail.Species_DD_Desc)>' ') AND ((OE_Order_Entry_Detail.[Door Number])>' ' And (OE_Order_Entry_Detail.[Door Number])<>'misc') AND ((OE_Order_Cover_Page.[Order Number])='$id'))
+                            
+		) CL_Config_Detail_And_Specs_Qry LEFT JOIN PD_Tracking ON (CL_Config_Detail_And_Specs_Qry.[Door Number] = PD_Tracking.[Door Number]) AND (CL_Config_Detail_And_Specs_Qry.[Proposal #] = PD_Tracking.[Order Number])
+                            
+		WHERE (((CL_Config_Detail_And_Specs_Qry.[Proposal #])='$id'))
+
+	) HLHR_Qry ON (CL_Config_Detail_And_Specs_Qry.[Door Number] = HLHR_Qry.[Door Number]) AND (CL_Config_Detail_And_Specs_Qry.[Proposal #] = HLHR_Qry.[Proposal #]) AND (IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%Bipart%' And CL_Config_Detail_And_Specs_Qry.[Door Number] + IIf(PD_Tracking.[Qty Display]<>'1 of 1',' ' + PD_Tracking.[Qty Display],'') Like '%1 of%','HL',IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%Bipart%' And CL_Config_Detail_And_Specs_Qry.[Door Number] + IIf(PD_Tracking.[Qty Display]<>'1 of 1',' ' + PD_Tracking.[Qty Display],'') Like '%2 of%','HR',IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%Dble Poc%' And CL_Config_Detail_And_Specs_Qry.[Door Number] + IIf(PD_Tracking.[Qty Display]<>'1 of 1',' ' + PD_Tracking.[Qty Display],'') Like '%1 of%','HL',IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%Dble Poc%' And CL_Config_Detail_And_Specs_Qry.[Door Number] + IIf(PD_Tracking.[Qty Display]<>'1 of 1',' ' + PD_Tracking.[Qty Display],'') Like '%2 of%','HR',IIf((CL_Config_Detail_And_Specs_Qry.[swing] Like '%Poc%' AND CL_Config_Detail_And_Specs_Qry.[swing] Not Like '%Dble Poc%') And CL_Config_Detail_And_Specs_Qry.[Door Number] + IIf(PD_Tracking.[Qty Display] Like '%1 of%','  ' + PD_Tracking.[Qty Display],'') Like '%1 of%','HL',IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%HR%','HR',IIf(CL_Config_Detail_And_Specs_Qry.[swing] Like '%HL%','HL',''))))))) = HLHR_Qry.[HLHR])
+
+	LEFT JOIN CL_Jamb_Detail ON CL_Config_Detail_And_Specs_Qry.[Proposal #] = CL_Jamb_Detail.[Jamb Order Number] AND CL_Config_Detail_And_Specs_Qry.[Interior or Exterior] = CL_Jamb_Detail.[Interior or Exterior] AND CL_Config_Detail_And_Specs_Qry.[Jamb Thickness Head] = CL_Jamb_Detail.[Jamb Thickness Head] AND CL_Config_Detail_And_Specs_Qry.[Jamb Thickness Leg] = CL_Jamb_Detail.[Jamb Thickness Leg] AND CL_Config_Detail_And_Specs_Qry.[Jamb Type] = CL_Jamb_Detail.[Jamb Type] AND CL_Config_Detail_And_Specs_Qry.[Species_DD_Desc] = CL_Jamb_Detail.[Jamb Species] AND CL_Config_Detail_And_Specs_Qry.[Jamb Grade] = CL_Jamb_Detail.[Jamb Grade] AND CL_Config_Detail_And_Specs_Qry.[Jamb Calculation Group] = CL_Jamb_Detail.[Jamb Calculation Group] AND CL_Config_Detail_And_Specs_Qry.[DS Report Group] = CL_Jamb_Detail.[DS Report Group]
+
+	LEFT JOIN DD_Fraction ON CL_Config_Detail_And_Specs_Qry.[Jamb Thickness Head] = DD_Fraction.Fraction
+
+) CL_CNC_Import_CSV_Sub
+
+GROUP BY CL_CNC_Import_CSV_Sub.[AllDoor Number], 
+
+[Order Number], [Warning Label], Name, Species_DD_Desc, Style, Swing, Construction, 
+
+[Top Rail Flat], [Bottom Rail Flat], [Left Stile Flat], [Right Stile Flat], 
+
+[Door Thickness], [Leaf Height], [Leaf Width], [Finished Leaf Height], [Finished Leaf Width], [Downsize], [TopTrim], 
+
+[Hinge Length], [Top Hinge 1], [Top Hinge 2], [Top Hinge 3], [Top Hinge 4], [Top Hinge 5], 
+
+[Top Jamb Hinge 1], [Top Jamb Hinge 2], [Top Jamb Hinge 3], [Top Jamb Hinge 4], [Top Jamb Hinge 5],
+
+[Hinge Backset], [Lockset Lever Backset], [Lockset Lever Height],
+
+[Pocket Edge Pull Height], [Pocket Face Pull Backset], [Pocket Face Pull Height],
+
+[Left Stile Width], [Right Stile Width], [Stile Downsize], [Door Thickness Decimal], [Cw], 
+
+[Top Rail Width], [Bottom Rail Width], [HeightDec], [Knob Rail Ht], [Knob Rail Wid], ROUND([Widthdec],4), [Knob Rail 2 Wid], [Knob Rail 2 Ht], 
+
+[HingeLoc], [Hinge Qty], [Inner Stile Flat], [Inner Stile Flat 2], [Inner Stile Flat 3], [Inner Stile Flat 4], [Inner Rail Flat], [Inner Rail Flat 2], [Inner Rail Flat 3], [Inner Rail Flat 4], 
+
+[Opening Height], [Opening Height 2], [Opening Height 3], [Opening Height 4],
+
+[Panel Material], [Panel Material 2], [Panel Material 3], [Panel Material 4],
+
+[Opening Width], [Opening Width 2], [Opening Width 3], [Opening Width 4],
+
+[Rail Spacing], Lock, Grade, [Cope Profile], [Panel Type], [Glass Type], [General Comments Doors], [Hinge Description], [Hinge Type], [Hinge Style], 
+
+Bore1, Bore2, Bore3, 
+
+[Eq Opening],
+
+[Ext Options1], [Ext Options2], [Ext Options3], [Ext Options4], [Ext Options5], [Ext Options6], [Ext Options7], [Ext Options8], [Ext Options9], [Ext Options10], [Ext Options11],
+
+[Hinge Part Number], [Center Stile Mill Length], [Center Stile 2 Mill Length], [Center Stile 3 Mill Length], [Center Stile 4 Mill Length], [Lockset Lever BS], [Lockset Lever Ht], [Pock Edge Pull Ht], [Pocket Face Pull Ht], [Pocket Face Pull BS], [Mort For], [Stile Construction], [General Comments Doors], [Glass Comments], [Moulding], [Prefinish Options], [Misc Door Detail], [Fire Rating], Backset, [Bore Height], [Mill Batch Nbr],
+
+[Passage Ht], [Passage Dia], [Passage BS], [Privacy Dia], [Privacy BS], [Privacy Ht], [Catch Type], [Catch Location], [Catch Dist], [Pock Edge Pull BS], 
+
+[Lockset Make], [Lockset Pass bore height],  [Lockset Priv Bore Height], [Privacy Diameter], [Privacy Make], [Jamb Grade], [Jamb Species], [Jamb Thickness Head], [Jamb Thickness Leg], [Jamb Type], [Rab Depth], [Opening Width Decimal], [Jamb Leg Length], [Jamb Width], [Cope Number], [Description]
+
+ORDER BY [MinOf Item Number], [AllDoor Number]";
+
+$params = array();
+$options =  array( "Scrollable" => SQLSRV_CURSOR_KEYSET );
+
+$query = sqlsrv_query($conn, $query, $params, $options);
+$total_results = sqlsrv_num_rows($query);
